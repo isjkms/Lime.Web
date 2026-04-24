@@ -31,10 +31,8 @@ export default async function MePage() {
 
   const provider = "email";
 
-  // Spotify 연결 여부 (cookie 기반 토큰)
-  const { cookies } = await import("next/headers");
-  const cookieStore = await cookies();
-  const spotifyConnected = !!cookieStore.get("sp_refresh")?.value;
+  const { getSpotifyToken } = await import("@/lib/auth");
+  const spotifyConnected = !!(await getSpotifyToken());
 
   return (
     <div className="max-w-lg mx-auto space-y-6">

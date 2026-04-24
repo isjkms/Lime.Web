@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePlayer } from "@/store/player";
+import { getSpotifyToken } from "@/lib/auth-client";
 
 type Row = {
   id: string;
@@ -52,8 +53,7 @@ function RowView({ target, row }: { target: "track" | "album"; row: Row }) {
   const [hasSpotify, setHasSpotify] = useState(false);
   useEffect(() => {
     if (target !== "track") return;
-    fetch("/api/spotify/user-token").then((r) => r.json())
-      .then((d) => setHasSpotify(!!d.token)).catch(() => {});
+    getSpotifyToken().then((t) => setHasSpotify(!!t));
   }, [target]);
 
   const isThis = target === "track" && current?.id === row.id;

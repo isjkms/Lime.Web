@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser, signOut } from "@/lib/auth-client";
+import { getCurrentUser, signOut, spotifyConnectUrl, disconnectSpotify } from "@/lib/auth-client";
 
 export default function ProfileEditor({
   initialName,
@@ -23,6 +23,9 @@ export default function ProfileEditor({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const returnTo = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
   const [name, setName] = useState(initialName);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [busy, setBusy] = useState(false);
@@ -179,15 +182,15 @@ export default function ProfileEditor({
             </div>
           </div>
           {spotifyConnected ? (
-            <a
-              href="/api/spotify/logout"
+            <button
+              onClick={async () => { await disconnectSpotify(); window.location.reload(); }}
               className="text-sm px-3 py-1.5 rounded-full border border-border hover:bg-panel2 whitespace-nowrap"
             >
               연결 해제
-            </a>
+            </button>
           ) : (
             <a
-              href="/api/spotify/login"
+              href={spotifyConnectUrl(returnTo)}
               className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full bg-[#1db954] text-black font-semibold hover:opacity-90 whitespace-nowrap"
             >
               <SpotifyIcon size={14} mono />

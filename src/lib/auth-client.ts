@@ -46,3 +46,32 @@ export function loginUrl(provider: "google" | "kakao" | "naver", returnTo = "/")
   const qs = new URLSearchParams({ returnTo });
   return apiUrl(`/auth/${provider}/start?${qs.toString()}`);
 }
+
+export async function getSpotifyToken(): Promise<string | null> {
+  try {
+    const res = await fetch(apiUrl("/spotify/user-token"), {
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function spotifyConnectUrl(returnTo?: string) {
+  const path = "/spotify/connect/start";
+  if (!returnTo) return apiUrl(path);
+  const qs = new URLSearchParams({ returnTo });
+  return apiUrl(`${path}?${qs.toString()}`);
+}
+
+
+export async function disconnectSpotify() {
+  await fetch(apiUrl("/spotify/disconnect"), {
+    method: "POST",
+    credentials: "include",
+  });
+}

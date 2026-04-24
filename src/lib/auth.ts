@@ -14,6 +14,23 @@ function apiUrl(path: string) {
   return `${API_BASE.replace(/\/$/, "")}${path}`;
 }
 
+export async function getSpotifyToken(): Promise<string | null> {
+  if (!API_BASE) return null;
+  try {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+    const res = await fetch(apiUrl("/spotify/user-token"), {
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   if (!API_BASE) return null;
   try {

@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePlayer, type PlayableTrack } from "@/store/player";
+import { getSpotifyToken } from "@/lib/auth-client";
 
 export default function PlayButton({ track }: { track: PlayableTrack }) {
   const { current, isPlaying, setCurrent, setPlaying } = usePlayer();
   const [hasSpotify, setHasSpotify] = useState<boolean>(false);
   useEffect(() => {
-    fetch("/api/spotify/user-token").then((r) => r.json()).then((d) => setHasSpotify(!!d.token)).catch(() => {});
+    getSpotifyToken().then((t) => setHasSpotify(!!t));
   }, []);
   const isThis = current?.id === track.id;
   const playing = isThis && isPlaying;

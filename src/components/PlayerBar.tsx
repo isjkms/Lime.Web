@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { usePlayer } from "@/store/player";
+import { getSpotifyToken, spotifyConnectUrl, getCurrentUser } from "@/lib/auth-client";
 
 declare global {
   interface Window {
@@ -22,19 +24,24 @@ export default function PlayerBar() {
     current, isPlaying, positionMs, durationMs, volume, mode, seekToken, seekMs,
     setPlaying, setPosition, setDuration, setVolume, setMode, seek,
   } = usePlayer();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const returnTo = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playerRef = useRef<any>(null);
   const deviceIdRef = useRef<string | null>(null);
   const [spotifyReady, setSpotifyReady] = useState(false);
   const [hasSpotifyToken, setHasSpotifyToken] = useState(false);
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
   const [warn, setWarn] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const lastVolRef = useRef(volume);
 
   useEffect(() => {
-    const check = () =>
-      fetch("/api/spotify/user-token").then((r) => r.json())
-        .then((d) => setHasSpotifyToken(!!d.token)).catch(() => {});
+    const check = () => {
+      getCurrentUser().then((u) => setIsAuthed(!!u));
+      getSpotifyToken().then((t) => setHasSpotifyToken(!!t));
+    };
     check();
     const onFocus = () => check();
     window.addEventListener("focus", onFocus);
@@ -68,8 +75,8 @@ export default function PlayerBar() {
       const player = new window.Spotify.Player({
         name: "Murate Web Player",
         getOAuthToken: async (cb: (t: string) => void) => {
-          const d = await fetch("/api/spotify/user-token").then((r) => r.json());
-          if (d.token) cb(d.token);
+          const t = await getSpotifyToken();
+          if (t) cb(t);
         },
         volume: volume,
       });
@@ -101,7 +108,7 @@ export default function PlayerBar() {
     (async () => {
       if (hasSpotifyToken && spotifyReady && current.spotifyId && deviceIdRef.current) {
         setMode("spotify");
-        const { token } = await fetch("/api/spotify/user-token").then((r) => r.json());
+        const token = await getSpotifyToken();
         if (!token) return;
         const res = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${deviceIdRef.current}`,
@@ -162,7 +169,7 @@ export default function PlayerBar() {
     if (mode === "spotify" && playerRef.current?.seek) playerRef.current.seek(seekMs);
   }, [seekToken]);
 
-  if (!current) return null;
+  if (!current || !isAuthed) return null;
 
   const pct = durationMs ? Math.min(100, (positionMs / durationMs) * 100) : 0;
   const volPct = Math.round((muted ? 0 : volume) * 100);
@@ -250,6 +257,14 @@ export default function PlayerBar() {
                 <span className="chip ml-1 text-[9px] md:text-[10px]" style={{ borderColor: "transparent", background: "rgba(255,92,138,0.15)", color: "#ff9cba" }}>
                   {mode === "spotify" ? "FULL" : "PREVIEW"}
                 </span>
+              )}
+              {!hasSpotifyToken && current.spotifyId && (
+                <a
+                  href={spotifyConnectUrl(returnTo)}
+                  className="ml-1 text-[10px] md:text-[11px] px-2 py-0.5 rounded-full bg-[#1db954] text-black font-semibold hover:opacity-90"
+                >
+                  연동하기
+                </a>
               )}
             </div>
           </div>

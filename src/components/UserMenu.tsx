@@ -1,12 +1,18 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { signOut } from "@/lib/auth-client";
 
 export default function UserMenu({
   name, avatarUrl, points, isAdmin = false,
 }: { name: string; avatarUrl: string | null; points: number; isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = "/";
+  };
   useEffect(() => {
     const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", h);
@@ -48,11 +54,12 @@ export default function UserMenu({
               🛡 신고 관리
             </Link>
           )}
-          <form action="/auth/signout" method="post">
-            <button className="block w-full text-left px-4 py-2.5 hover:bg-panel2 text-sm text-red-400 border-t border-border">
-              로그아웃
-            </button>
-          </form>
+          <button
+            onClick={handleSignOut}
+            className="block w-full text-left px-4 py-2.5 hover:bg-panel2 text-sm text-red-400 border-t border-border"
+          >
+            로그아웃
+          </button>
         </div>
       )}
     </div>

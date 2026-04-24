@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePlayer, type PlayableTrack } from "@/store/player";
+import { getSpotifyToken } from "@/lib/auth-client";
 
 type Track = {
   id: string;
@@ -33,8 +34,7 @@ export default function RecentTrackCard({ track }: { track: Track }) {
   const { current, isPlaying, setCurrent, setPlaying } = usePlayer();
   const [hasSpotify, setHasSpotify] = useState(false);
   useEffect(() => {
-    fetch("/api/spotify/user-token").then((r) => r.json())
-      .then((d) => setHasSpotify(!!d.token)).catch(() => {});
+    getSpotifyToken().then((t) => setHasSpotify(!!t));
   }, []);
 
   const isThis = current?.id === track.id;
