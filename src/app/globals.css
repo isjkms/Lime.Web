@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --rose: #ff5c8a;
+  --violet: #a78bfa;
+  --amber: #ffb347;
+}
+
+html, body {
+  background:
+    radial-gradient(1100px 550px at 85% -10%, rgba(255, 92, 138, 0.14), transparent 60%),
+    radial-gradient(900px 500px at -10% 15%, rgba(167, 139, 250, 0.12), transparent 60%),
+    radial-gradient(700px 400px at 50% 110%, rgba(255, 179, 71, 0.08), transparent 60%),
+    #0b0710;
+  background-attachment: fixed;
+  color: #f4eff7;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+.card {
+  @apply bg-panel/70 border border-border rounded-2xl p-4 backdrop-blur-md;
+  box-shadow: 0 4px 24px -12px rgba(0, 0, 0, 0.4);
+}
+.btn {
+  @apply px-3 py-2 rounded-full bg-panel2 border border-border hover:border-accent/60 hover:text-white transition text-sm;
+}
+.btn-primary {
+  @apply px-4 py-2 rounded-full font-semibold text-white transition active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed;
+  background: linear-gradient(135deg, #ff5c8a 0%, #a78bfa 100%);
+  box-shadow: 0 6px 20px -6px rgba(255, 92, 138, 0.5);
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.input {
+  @apply bg-panel2/80 border border-border rounded-xl px-4 py-2 outline-none focus:border-accent w-full transition;
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #2d2342; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #3d3055; }
+
+/* 레이블 */
+.chip {
+  @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs border border-border bg-panel2/70 text-muted;
+}
+
+/* 히어로 그라디언트 텍스트 */
+.gradient-text {
+  background: linear-gradient(90deg, #ff5c8a, #ffb347, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 커스텀 레인지 슬라이더 */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 18px;
+}
+input[type="range"].slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right,
+    #ff5c8a var(--pct, 0%),
+    rgba(255,255,255,0.12) var(--pct, 0%));
+}
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #ff5c8a;
+  margin-top: -5px;
+  box-shadow: 0 2px 6px rgba(255, 92, 138, 0.6);
+}
+input[type="range"].slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+}
+input[type="range"].slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: #ff5c8a;
+}
+input[type="range"].slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #ff5c8a;
+}
