@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPublicClient } from "@/lib/supabase/public";
-import { getAppToken } from "@/lib/spotify";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +25,9 @@ export async function GET() {
       if (error) throw new Error(error.message);
     }),
     timed(async () => {
-      const t = await getAppToken();
-      if (!t) throw new Error("no_token");
+      if (!API_BASE) throw new Error("no_api_base");
+      const res = await fetch(`${API_BASE.replace(/\/$/, "")}/spotify/search?q=ping`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`status_${res.status}`);
     }),
   ]);
   const ok = db.ok && spotify.ok;

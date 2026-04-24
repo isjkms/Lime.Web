@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser } from "@/lib/auth-client";
+import { apiUrl, getCurrentUser } from "@/lib/auth-client";
 import PlayButton from "./PlayButton";
 
 export default function AlbumTracks({
@@ -22,7 +22,7 @@ export default function AlbumTracks({
 
   useEffect(() => {
     (async () => {
-      const r = await fetch(`/api/spotify/album/${spotifyAlbumId}`);
+      const r = await fetch(apiUrl(`/spotify/albums/${spotifyAlbumId}`));
       const d = await r.json();
       if (d.tracks) {
         setTracks(d.tracks);

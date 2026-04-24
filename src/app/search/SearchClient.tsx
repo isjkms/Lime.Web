@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser } from "@/lib/auth-client";
+import { apiUrl, getCurrentUser } from "@/lib/auth-client";
 
 type Tab = "track" | "album";
 
@@ -23,19 +23,16 @@ export default function SearchClient() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [fallback, setFallback] = useState(false);
 
   useEffect(() => {
     if (!q) return;
     setLoading(true);
     setApiError(null);
-    setFallback(false);
     (async () => {
-      const spRes = await fetch(`/api/spotify/search?q=${encodeURIComponent(q)}`).then((r) => r.json());
+      const spRes = await fetch(apiUrl(`/spotify/search?q=${encodeURIComponent(q)}`)).then((r) => r.json());
       const tracks = spRes.tracks ?? [];
       const albums = spRes.albums ?? [];
       if (spRes.error) setApiError(spRes.error);
-      if (spRes.fallback === "db") setFallback(true);
       setSpTracks(tracks);
       setSpAlbums(albums);
 
@@ -155,7 +152,6 @@ export default function SearchClient() {
       {!loading && apiError && (
         <div className="card text-sm" style={{ borderColor: "rgba(255,179,71,0.4)" }}>
           <div className="text-amber font-medium">Spotify 검색 오류: {apiError}</div>
-          {fallback && <div className="text-muted text-xs mt-1">등록된 곡·앨범에서만 검색한 결과를 보여줘요. 신규 곡 추가는 Spotify 복구 후 가능해요.</div>}
         </div>
       )}
 
