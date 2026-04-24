@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 import NotificationBell from "./NotificationBell";
 
 export default async function Header() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   let points = 0;
-  let name = "";
-  let avatar: string | null = null;
+  let name = user?.name ?? "";
+  let avatar: string | null = user?.avatarUrl ?? null;
   let isAdmin = false;
   if (user) {
     const { data } = await supabase
@@ -19,8 +20,8 @@ export default async function Header() {
       .eq("id", user.id).single();
     if (data) {
       points = data.points ?? 0;
-      name = data.display_name;
-      avatar = data.avatar_url;
+      name = data.display_name ?? name;
+      avatar = data.avatar_url ?? avatar;
       isAdmin = !!data.is_admin;
     }
   }

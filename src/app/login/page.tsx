@@ -1,18 +1,13 @@
 "use client";
-import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
+import { loginUrl } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
-  const supabase = createClient();
-  const [err, setErr] = useState<string | null>(null);
-  const login = async (provider: "google" | "kakao") => {
-    setErr(null);
-    const base = window.location.origin;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${base}/auth/callback` },
-    });
-    if (error) setErr(error.message);
+  const params = useSearchParams();
+  const returnTo = params.get("returnTo") ?? "/";
+
+  const go = (provider: "google" | "kakao" | "naver") => {
+    window.location.href = loginUrl(provider, returnTo);
   };
 
   return (
@@ -23,7 +18,7 @@ export default function LoginPage() {
       </div>
 
       <button
-        onClick={() => login("google")}
+        onClick={() => go("google")}
         className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white text-[#1f1f1f] font-medium hover:bg-gray-100 active:scale-[0.99] transition border border-[#dadce0]"
       >
         <GoogleLogo />
@@ -31,7 +26,7 @@ export default function LoginPage() {
       </button>
 
       <button
-        onClick={() => login("kakao")}
+        onClick={() => go("kakao")}
         className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg font-medium active:scale-[0.99] transition"
         style={{ background: "#FEE500", color: "rgba(0,0,0,0.85)" }}
       >
@@ -39,11 +34,14 @@ export default function LoginPage() {
         <span>카카오로 계속하기</span>
       </button>
 
-      {err && <p className="text-sm text-red-400 text-center">{err}</p>}
-
-      <p className="text-xs text-muted text-center pt-2 border-t border-border">
-        Supabase Dashboard → Authentication → Providers에서<br />각 소셜 로그인을 먼저 활성화해야 해요.
-      </p>
+      <button
+        onClick={() => go("naver")}
+        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg font-medium active:scale-[0.99] transition text-white"
+        style={{ background: "#03C75A" }}
+      >
+        <NaverLogo />
+        <span>네이버로 계속하기</span>
+      </button>
     </div>
   );
 }
@@ -63,6 +61,14 @@ function KakaoLogo() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
       <path fill="#000" d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.87 5.3 4.66 6.71L5.5 21.5c-.09.3.24.54.5.37l4.5-3c.49.06.99.13 1.5.13 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+    </svg>
+  );
+}
+
+function NaverLogo() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden>
+      <path fill="#fff" d="M11.54 10.69 7.98 5.5H4.5v9h3.96v-5.2l3.56 5.2h3.48v-9h-3.96v5.19z"/>
     </svg>
   );
 }

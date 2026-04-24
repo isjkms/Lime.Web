@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser, signOut } from "@/lib/auth-client";
 
 export default function ProfileEditor({
   initialName,
@@ -35,10 +36,10 @@ export default function ProfileEditor({
     if (file.size > 2 * 1024 * 1024) { setMsg("파일이 2MB를 넘어요."); return; }
     setUploading(true); setMsg(null);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) throw new Error("로그인이 필요해요.");
+      const user = await getCurrentUser();
+      if (!user) throw new Error("로그인이 필요해요.");
       const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${auth.user.id}/avatar-${Date.now()}.${ext}`;
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
         cacheControl: "3600",
         upsert: false,
@@ -78,11 +79,11 @@ export default function ProfileEditor({
 
       // 아바타 URL은 별도 업데이트
       if (avatar.trim() !== initialAvatar.trim()) {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) throw new Error("로그인이 필요해요.");
+        const user = await getCurrentUser();
+        if (!user) throw new Error("로그인이 필요해요.");
         const { error } = await supabase.from("profiles")
           .update({ avatar_url: avatar.trim() || null })
-          .eq("id", auth.user.id);
+          .eq("id", user.id);
         if (error) throw new Error(error.message);
       }
 
@@ -101,7 +102,7 @@ export default function ProfileEditor({
     setBusy(true); setMsg(null);
     const { error } = await supabase.rpc("delete_account");
     if (error) { setMsg("탈퇴 실패: " + error.message); setBusy(false); return; }
-    await supabase.auth.signOut();
+    await signOut();
     router.replace("/");
   };
 

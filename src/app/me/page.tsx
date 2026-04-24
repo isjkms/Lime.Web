@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import ProfileEditor from "./ProfileEditor";
 
 export const revalidate = 0;
@@ -13,7 +14,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 
 export default async function MePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -28,7 +29,7 @@ export default async function MePage() {
     ? (myReviews.reduce((s, r: any) => s + Number(r.rating), 0) / myReviews.length)
     : 0;
 
-  const provider = (user.app_metadata?.provider as string) ?? "email";
+  const provider = "email";
 
   // Spotify 연결 여부 (cookie 기반 토큰)
   const { cookies } = await import("next/headers");

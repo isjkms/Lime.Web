@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/auth-client";
 
 type Tab = "track" | "album";
 
@@ -77,8 +78,8 @@ export default function SearchClient() {
   const openTrack = async (t: any) => {
     if (localTrackIds[t.id]) { router.push(`/tracks/${localTrackIds[t.id]}`); return; }
     setBusy(`t-${t.id}`);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) { router.push("/login"); return; }
+    const user = await getCurrentUser();
+    if (!user) { router.push("/login"); return; }
 
     // 앨범 먼저 upsert — 곡의 album_id를 채워 앨범 평가 페이지로 바로 이동할 수 있게
     let albumDbId: string | null = (t.album?.id && localAlbumIds[t.album.id]) || null;
@@ -92,7 +93,7 @@ export default function SearchClient() {
             cover_url: t.album.images?.[0]?.url ?? null,
             release_date: t.album.release_date ?? null,
             total_tracks: t.album.total_tracks ?? null,
-            added_by: auth.user.id,
+            added_by: user.id,
           },
           { onConflict: "spotify_id" }
         )
@@ -110,7 +111,7 @@ export default function SearchClient() {
       preview_url: t.preview_url,
       duration_ms: t.duration_ms,
       release_date: t.album?.release_date ?? null,
-      added_by: auth.user.id,
+      added_by: user.id,
     }).select("id").single();
     setBusy(null);
     if (error) { alert(error.message); return; }
@@ -120,8 +121,8 @@ export default function SearchClient() {
   const openAlbum = async (a: any) => {
     if (localAlbumIds[a.id]) { router.push(`/albums/${localAlbumIds[a.id]}`); return; }
     setBusy(`a-${a.id}`);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) { router.push("/login"); return; }
+    const user = await getCurrentUser();
+    if (!user) { router.push("/login"); return; }
     const { data, error } = await supabase.from("albums").insert({
       spotify_id: a.id,
       title: a.name,
@@ -129,7 +130,7 @@ export default function SearchClient() {
       cover_url: a.images?.[0]?.url ?? null,
       release_date: a.release_date,
       total_tracks: a.total_tracks,
-      added_by: auth.user.id,
+      added_by: user.id,
     }).select("id").single();
     setBusy(null);
     if (error) { alert(error.message); return; }

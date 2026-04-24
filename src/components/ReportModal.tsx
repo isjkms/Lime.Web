@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/auth-client";
 
 const REASONS: { value: string; label: string }[] = [
   { value: "abuse", label: "과도한 비난·욕설" },
@@ -27,9 +28,9 @@ export default function ReportModal({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setErr(null);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) { setErr("로그인이 필요합니다."); setBusy(false); return; }
-    const payload: any = { review_id: reviewId, reporter_id: auth.user.id, reason };
+    const user = await getCurrentUser();
+    if (!user) { setErr("로그인이 필요합니다."); setBusy(false); return; }
+    const payload: any = { review_id: reviewId, reporter_id: user.id, reason };
     if (reason === "other") payload.detail = detail.trim().slice(0, 500);
     const { error } = await supabase.from("review_reports").insert(payload);
     setBusy(false);

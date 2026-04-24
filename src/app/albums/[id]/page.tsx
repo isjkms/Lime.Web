@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import ReviewForm from "@/components/ReviewForm";
 import ReviewList from "@/components/ReviewList";
 import AlbumTracks from "@/components/AlbumTracks";
@@ -31,7 +32,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
   const supabase = await createClient();
   const { data: album } = await supabase.from("albums").select("*").eq("id", id).maybeSingle();
   if (!album) notFound();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const { data: stats } = await supabase.from("album_stats").select("*").eq("album_id", id).maybeSingle();
 
   return (

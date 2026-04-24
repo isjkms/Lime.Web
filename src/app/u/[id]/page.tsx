@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import FamousBadge from "@/components/FamousBadge";
 import FollowButton from "@/components/FollowButton";
 
@@ -15,7 +16,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
     .eq("id", id).maybeSingle();
   if (!profile) notFound();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const isMe = user?.id === profile.id;
 
   let initiallyFollowing = false;

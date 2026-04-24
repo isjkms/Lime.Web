@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/auth-client";
 
 export default function FollowButton({
   targetId,
@@ -22,16 +23,16 @@ export default function FollowButton({
   const toggle = async () => {
     if (!loggedIn) { router.push("/login"); return; }
     setBusy(true);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) { router.push("/login"); setBusy(false); return; }
+    const user = await getCurrentUser();
+    if (!user) { router.push("/login"); setBusy(false); return; }
     if (following) {
       const { error } = await supabase.from("follows")
-        .delete().match({ follower_id: auth.user.id, followee_id: targetId });
+        .delete().match({ follower_id: user.id, followee_id: targetId });
       if (!error) setFollowing(false);
       else alert(error.message);
     } else {
       const { error } = await supabase.from("follows")
-        .insert({ follower_id: auth.user.id, followee_id: targetId });
+        .insert({ follower_id: user.id, followee_id: targetId });
       if (!error) setFollowing(true);
       else if (error.code !== "23505") alert(error.message);
       else setFollowing(true);

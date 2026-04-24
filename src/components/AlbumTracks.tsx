@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/auth-client";
 import PlayButton from "./PlayButton";
 
 export default function AlbumTracks({
@@ -41,8 +42,8 @@ export default function AlbumTracks({
     const existingId = localMap.get(t.id);
     if (existingId) { router.push(`/tracks/${existingId}`); return; }
     setBusy(t.id);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) { router.push("/login"); return; }
+    const user = await getCurrentUser();
+    if (!user) { router.push("/login"); return; }
     const { data, error } = await supabase.from("tracks").insert({
       spotify_id: t.id,
       title: t.name,
@@ -51,7 +52,7 @@ export default function AlbumTracks({
       cover_url: coverUrl,
       preview_url: t.preview_url,
       duration_ms: t.duration_ms,
-      added_by: auth.user.id,
+      added_by: user.id,
     }).select("id").single();
     setBusy(null);
     if (error) { alert(error.message); return; }
