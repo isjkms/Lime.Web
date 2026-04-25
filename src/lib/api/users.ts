@@ -11,6 +11,9 @@ export type UserProfile = {
   createdAt: string;
   reviewCount: number;
   likesReceived: number;
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
 };
 
 export type LeaderboardRow = {

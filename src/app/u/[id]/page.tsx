@@ -3,6 +3,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import FamousBadge from "@/components/FamousBadge";
 import Avatar from "@/components/Avatar";
+import FollowButton from "@/components/FollowButton";
+import { getCurrentUser } from "@/lib/auth";
 import { getUser } from "@/lib/api/users";
 import { listUserReviews } from "@/lib/api/reviews";
 
@@ -15,12 +17,16 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
   const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
   const init = cookieHeader ? { headers: { cookie: cookieHeader } } : undefined;
 
-  const profile = await getUser(id, init);
+  const [profile, viewer] = await Promise.all([
+    getUser(id, init),
+    getCurrentUser(),
+  ]);
   if (!profile) notFound();
 
   const reviewsPage = await listUserReviews(profile.id, { pageSize: 50 }, init);
 
   const famous = profile.reviewCount >= 1000 && profile.likesReceived >= 1000;
+  const isMe = viewer?.id === profile.id;
 
   return (
     <div className="space-y-6">
@@ -34,11 +40,24 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
           <div className="text-xs text-muted mt-1">
             가입 {new Date(profile.createdAt).toLocaleDateString("ko-KR")}
           </div>
-          <div className="flex gap-4 text-sm mt-2">
+          <div className="flex gap-4 text-sm mt-2 flex-wrap">
             <span><b>{profile.reviewCount}</b> <span className="text-muted">평가</span></span>
+            <Link href={`/u/${profile.id}/followers`} className="hover:text-white">
+              <b>{profile.followersCount}</b> <span className="text-muted">팔로워</span>
+            </Link>
+            <Link href={`/u/${profile.id}/following`} className="hover:text-white">
+              <b>{profile.followingCount}</b> <span className="text-muted">팔로잉</span>
+            </Link>
             <span><b>{profile.likesReceived}</b> <span className="text-muted">좋아요</span></span>
           </div>
         </div>
+        {!isMe && (
+          <FollowButton
+            targetId={profile.id}
+            loggedIn={!!viewer}
+            initiallyFollowing={profile.isFollowing}
+          />
+        )}
       </div>
 
       <section className="space-y-3">

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { signOut, spotifyConnectUrl, disconnectSpotify } from "@/lib/auth-client";
@@ -7,20 +8,26 @@ import Avatar from "@/components/Avatar";
 
 export default function ProfileEditor({
   userId,
+  email,
   initialName,
   initialAvatar,
   initialBio,
   spotifyConnected,
   joinedAt,
   providers,
+  followersCount,
+  followingCount,
 }: {
   userId: string;
+  email: string;
   initialName: string;
   initialAvatar: string;
   initialBio: string;
   spotifyConnected: boolean;
   joinedAt: string | null;
   providers: string[];
+  followersCount: number;
+  followingCount: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -193,6 +200,31 @@ export default function ProfileEditor({
             onChange={onPickFile}
           />
         </div>
+
+        <div className="flex gap-4 text-sm">
+          <Link
+            href={`/u/${userId}/followers`}
+            className="hover:text-white text-muted"
+          >
+            <b className="text-white">{followersCount}</b> 팔로워
+          </Link>
+          <Link
+            href={`/u/${userId}/following`}
+            className="hover:text-white text-muted"
+          >
+            <b className="text-white">{followingCount}</b> 팔로잉
+          </Link>
+        </div>
+
+        <label className="block">
+          <span className="text-sm text-muted">이메일</span>
+          <input
+            className="input mt-1 opacity-70 cursor-not-allowed"
+            value={email}
+            disabled
+            readOnly
+          />
+        </label>
 
         <label className="block">
           <span className="text-sm text-muted">닉네임</span>

@@ -15,9 +15,17 @@ type FeedItem = {
   item: { id: string; title: string; artist: string; cover_url: string | null };
 };
 
-export default function FamousFeed({ items }: { items: FeedItem[] }) {
+export default function FamousFeed({
+  items,
+  showFamousBadge = true,
+  emptyText = "아직 유명 평가자의 후기가 없어요.",
+}: {
+  items: FeedItem[];
+  showFamousBadge?: boolean;
+  emptyText?: string;
+}) {
   if (!items.length) {
-    return <div className="card text-muted text-sm">아직 유명 평가자의 후기가 없어요.</div>;
+    return <div className="card text-muted text-sm">{emptyText}</div>;
   }
   return (
     <div className="space-y-3">
@@ -36,8 +44,10 @@ export default function FamousFeed({ items }: { items: FeedItem[] }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Avatar src={r.profiles?.avatar_url ?? null} seed={r.user_id} size={20} />
-              <span className="text-sm font-medium">{r.profiles?.display_name ?? "익명"}</span>
-              <FamousBadge />
+              <Link href={`/u/${r.user_id}`} className="text-sm font-medium hover:text-white hover:underline underline-offset-2">
+                {r.profiles?.display_name ?? "익명"}
+              </Link>
+              {showFamousBadge && <FamousBadge />}
               <span className="text-xs text-muted">· {new Date(r.created_at).toLocaleString("ko-KR")}</span>
             </div>
             <div className="mt-1 flex items-center gap-2">

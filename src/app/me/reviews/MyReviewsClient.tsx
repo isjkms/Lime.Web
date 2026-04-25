@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteReview, type ReviewItem } from "@/lib/api/reviews";
 
-export default function MyReviewsClient({ initialItems }: { initialItems: ReviewItem[] }) {
+export default function MyReviewsClient({
+  initialItems,
+  stats,
+}: {
+  initialItems: ReviewItem[];
+  stats: { reviewCount: number; likesReceived: number; avgRating: number };
+}) {
   const router = useRouter();
   const [list, setList] = useState(initialItems);
   const [busy, setBusy] = useState<string | null>(null);
@@ -25,10 +31,15 @@ export default function MyReviewsClient({ initialItems }: { initialItems: Review
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">내 후기</h1>
-        <p className="text-muted text-sm">총 {list.length}개</p>
+      <div className="card">
+        <div className="grid grid-cols-3 gap-2">
+          <Stat label="평가" value={`${stats.reviewCount}`} />
+          <Stat label="받은 좋아요" value={`${stats.likesReceived}`} />
+          <Stat label="평균 별점" value={stats.avgRating ? stats.avgRating.toFixed(1) : "-"} />
+        </div>
       </div>
+
+      <p className="text-muted text-sm">총 {list.length}개</p>
 
       {list.length === 0 ? (
         <div className="card text-muted">아직 작성한 후기가 없어요.</div>
@@ -73,6 +84,15 @@ export default function MyReviewsClient({ initialItems }: { initialItems: Review
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-center">
+      <div className="text-lg font-bold">{value}</div>
+      <div className="text-xs text-muted">{label}</div>
     </div>
   );
 }

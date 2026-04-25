@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser } from "@/lib/auth-client";
+import { follow, unfollow } from "@/lib/api/social";
 
 export default function FollowButton({
   targetId,
@@ -16,29 +15,28 @@ export default function FollowButton({
   size?: "sm" | "md";
 }) {
   const router = useRouter();
-  const supabase = createClient();
   const [following, setFollowing] = useState(initiallyFollowing);
   const [busy, setBusy] = useState(false);
 
   const toggle = async () => {
     if (!loggedIn) { router.push("/login"); return; }
+    if (following && !confirm("팔로우를 끊을까요?")) return;
     setBusy(true);
-    const user = await getCurrentUser();
-    if (!user) { router.push("/login"); setBusy(false); return; }
-    if (following) {
-      const { error } = await supabase.from("follows")
-        .delete().match({ follower_id: user.id, followee_id: targetId });
-      if (!error) setFollowing(false);
-      else alert(error.message);
-    } else {
-      const { error } = await supabase.from("follows")
-        .insert({ follower_id: user.id, followee_id: targetId });
-      if (!error) setFollowing(true);
-      else if (error.code !== "23505") alert(error.message);
-      else setFollowing(true);
+    try {
+      if (following) {
+        await unfollow(targetId);
+        setFollowing(false);
+      } else {
+        await follow(targetId);
+        setFollowing(true);
+      }
+      router.refresh();
+    } catch (err: any) {
+      const msg = err?.message ?? "실패";
+      if (msg !== "self_follow") alert(msg);
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
-    router.refresh();
   };
 
   const pad = size === "sm" ? "px-2.5 py-1 text-xs" : "px-4 py-1.5 text-sm";

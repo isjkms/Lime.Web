@@ -95,6 +95,51 @@ type FamousRow = {
   album: { id: string; spotifyId: string; name: string; coverUrl: string | null; artists: ArtistRef[] } | null;
 };
 
+type FollowingFeedRow = {
+  id: string;
+  rating: number;
+  body: string;
+  createdAt: string;
+  user: { id: string; name: string; avatarUrl: string | null };
+  target: "track" | "album";
+  track: { id: string; spotifyId: string; name: string; coverUrl: string | null; artists: ArtistRef[] } | null;
+  album: { id: string; spotifyId: string; name: string; coverUrl: string | null; artists: ArtistRef[] } | null;
+};
+
+export async function getFollowingFeed(cookieHeader: string, limit = 10) {
+  if (!API_BASE) return [];
+  try {
+    const res = await fetch(apiUrl(`/reviews/following-feed?limit=${limit}`), {
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined,
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const rows: FollowingFeedRow[] = await res.json();
+    return rows.map((r) => {
+      const meta = r.target === "track" ? r.track : r.album;
+      if (!meta) return null;
+      return {
+        id: r.id,
+        user_id: r.user.id,
+        target_type: r.target,
+        target_id: meta.id,
+        rating: r.rating,
+        comment: r.body,
+        created_at: r.createdAt,
+        profiles: { display_name: r.user.name, avatar_url: r.user.avatarUrl },
+        item: {
+          id: meta.id,
+          title: meta.name,
+          artist: joinArtists(meta.artists),
+          cover_url: meta.coverUrl,
+        },
+      };
+    }).filter((x): x is NonNullable<typeof x> => x !== null);
+  } catch {
+    return [];
+  }
+}
+
 export async function getFamousRecentReviews(limit = 8) {
   const rows = await fetchJson<FamousRow[]>(`/reviews/famous-feed?limit=${limit}`, []);
   return rows.map((r) => {

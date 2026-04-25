@@ -38,11 +38,8 @@ export default function UserMenu({
             <div className="text-sm font-medium truncate">{name}</div>
             <div className="text-xs text-muted mt-0.5">{points}P 보유</div>
           </div>
-          <Link href="/me/reviews" onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-panel2 text-sm">
-            내 후기
-          </Link>
           <Link href="/me" onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-panel2 text-sm">
-            정보 수정
+            내 프로필
           </Link>
           {isAdmin && (
             <Link href="/admin/reports" onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-panel2 text-sm text-amber">

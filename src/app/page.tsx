@@ -1,18 +1,25 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import TopChartTabs from "@/components/TopChartTabs";
 import RecentReviewTable from "@/components/RecentReviewTable";
 import FamousFeed from "@/components/FamousFeed";
-import { getRecentlyReviewed, getTopRated, getFamousRecentReviews } from "@/lib/queries";
+import { getCurrentUser } from "@/lib/auth";
+import { getRecentlyReviewed, getTopRated, getFamousRecentReviews, getFollowingFeed } from "@/lib/queries";
 
-export const revalidate = 30;
+export const revalidate = 0;
 
 export default async function HomePage() {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+  const viewer = await getCurrentUser();
+
   const [
     recentTracks,
     recentAlbums,
     tDay, tMonth, tYear,
     aDay, aMonth, aYear,
     famous,
+    followingFeed,
   ] = await Promise.all([
     getRecentlyReviewed("track", 8),
     getRecentlyReviewed("album", 8),
@@ -23,6 +30,7 @@ export default async function HomePage() {
     getTopRated("album", "month", 5),
     getTopRated("album", "year", 5),
     getFamousRecentReviews(6),
+    viewer ? getFollowingFeed(cookieHeader, 8) : Promise.resolve([]),
   ]);
 
   return (
@@ -61,6 +69,18 @@ export default async function HomePage() {
           <RecentReviewTable target="album" rows={recentAlbums as any} />
         </div>
       </section>
+
+      {/* 팔로우한 사용자의 최신 후기 */}
+      {viewer && (
+        <section>
+          <h2 className="text-lg md:text-xl font-semibold mb-3">👥 팔로우한 사용자의 최신 후기</h2>
+          <FamousFeed
+            items={followingFeed as any}
+            showFamousBadge={false}
+            emptyText="아직 팔로우한 사용자의 후기가 없어요. 리더보드에서 좋은 평가자를 찾아보세요."
+          />
+        </section>
+      )}
 
       {/* 유명 평가자 */}
       <section>
