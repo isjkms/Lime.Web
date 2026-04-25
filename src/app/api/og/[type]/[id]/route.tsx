@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { createClient } from "@/lib/supabase/server";
+import { getTrack, getAlbum } from "@/lib/api/catalog";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -13,17 +13,14 @@ export async function GET(
     return new Response("not_found", { status: 404 });
   }
 
-  const supabase = await createClient();
-  const table = type === "track" ? "tracks" : "albums";
-  const statsTable = type === "track" ? "track_stats" : "album_stats";
-  const statsKey = type === "track" ? "track_id" : "album_id";
-
-  const { data: item } = await supabase.from(table).select("title, artist, cover_url").eq("id", id).maybeSingle();
+  const item = type === "track" ? await getTrack(id) : await getAlbum(id);
   if (!item) return new Response("not_found", { status: 404 });
 
-  const { data: stats } = await supabase.from(statsTable).select("avg_rating, review_count").eq(statsKey, id).maybeSingle();
-  const avg = stats?.avg_rating != null ? Number(stats.avg_rating).toFixed(1) : "—";
-  const n = stats?.review_count ?? 0;
+  const title = item.name;
+  const artist = item.artists.map((a) => a.name).join(", ");
+  const cover = item.coverUrl;
+  const avg = item.stats.reviewCount > 0 ? Number(item.stats.avgRating).toFixed(1) : "—";
+  const n = item.stats.reviewCount;
   const emoji = type === "track" ? "🎧" : "💿";
   const label = type === "track" ? "TRACK" : "ALBUM";
 
@@ -42,10 +39,10 @@ export async function GET(
           gap: 50,
         }}
       >
-        {item.cover_url ? (
+        {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={item.cover_url}
+            src={cover}
             width={380}
             height={380}
             style={{ borderRadius: 24, objectFit: "cover", boxShadow: "0 25px 60px rgba(0,0,0,.5)" }}
@@ -70,10 +67,10 @@ export async function GET(
             </div>
           </div>
           <div style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, display: "flex" }}>
-            {truncate(item.title, 60)}
+            {truncate(title, 60)}
           </div>
           <div style={{ fontSize: 28, color: "#8a8fa0", display: "flex" }}>
-            {truncate(item.artist, 60)}
+            {truncate(artist, 60)}
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginTop: 20 }}>
             <div style={{ fontSize: 96, fontWeight: 800, color: "#ff5c8a", lineHeight: 1 }}>{avg}</div>
@@ -83,7 +80,7 @@ export async function GET(
             </div>
           </div>
           <div style={{ marginTop: "auto", fontSize: 22, color: "#8a8fa0", display: "flex" }}>
-            Murate<span style={{ color: "#ff5c8a" }}>♪</span>
+            Lime<span style={{ color: "#ff5c8a" }}>♪</span>
           </div>
         </div>
       </div>

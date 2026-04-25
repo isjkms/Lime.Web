@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { getUser } from "@/lib/api/users";
+import { listUserReviews } from "@/lib/api/reviews";
 
 export const revalidate = 0;
 
@@ -22,38 +24,36 @@ export default async function CollectionPage({
   const { id } = await params;
   const sp = await searchParams;
   const type = sp.type === "album" ? "album" : "track";
-  const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles").select("id, display_name").eq("id", id).maybeSingle();
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.getAll().map((c) => `${c.name}=${c.value}`).join("; ");
+  const init = cookieHeader ? { headers: { cookie: cookieHeader } } : undefined;
+
+  const profile = await getUser(id, init);
   if (!profile) notFound();
 
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("rating, target_id")
-    .eq("user_id", id)
-    .eq("target_type", type)
-    .gte("rating", 6)
-    .order("rating", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const page = await listUserReviews(profile.id, { pageSize: 50, sort: "recent" }, init);
 
-  const ids = (reviews ?? []).map((r: any) => r.target_id);
-  const table = type === "track" ? "tracks" : "albums";
-  const { data: items } = ids.length
-    ? await supabase.from(table).select("id, title, artist, cover_url").in("id", ids)
-    : { data: [] as any[] };
-  const meta = new Map((items ?? []).map((t: any) => [t.id, t]));
-
-  const rows = (reviews ?? [])
-    .map((r: any) => ({ rating: Number(r.rating), ...meta.get(r.target_id) }))
-    .filter((x: any) => x.id);
+  const rows = page.items
+    .filter((r) => r.target === type && Number(r.rating) >= 6)
+    .map((r) => {
+      const meta = type === "track" ? r.track : r.album;
+      if (!meta) return null;
+      return {
+        id: meta.id,
+        title: meta.name,
+        artist: (meta.artists ?? []).map((a) => a.name).join(", "),
+        cover_url: meta.coverUrl,
+        rating: Number(r.rating),
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
 
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{profile.display_name}의 컬렉션</h1>
+          <h1 className="text-2xl font-bold">{profile.displayName}의 컬렉션</h1>
           <p className="text-sm text-muted mt-1">6점 이상 평가만 모았어요.</p>
         </div>
         <div className="inline-flex rounded-full border border-border overflow-hidden text-sm">
@@ -71,7 +71,7 @@ export default async function CollectionPage({
       ) : (
         <div className="space-y-8">
           {BUCKETS.map((b) => {
-            const inBucket = rows.filter((r: any) => r.rating >= b.min && r.rating <= b.max);
+            const inBucket = rows.filter((r) => r.rating >= b.min && r.rating <= b.max);
             if (!inBucket.length) return null;
             return (
               <section key={b.label} className="space-y-3">
@@ -80,7 +80,7 @@ export default async function CollectionPage({
                   <span className="text-xs text-muted">{inBucket.length}</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {inBucket.map((r: any) => (
+                  {inBucket.map((r) => (
                     <Link key={r.id} href={`/${type}s/${r.id}`} className="card p-2 hover:border-accent transition group">
                       <div className="relative">
                         {r.cover_url ? (
