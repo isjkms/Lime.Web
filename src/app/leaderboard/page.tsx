@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FamousBadge from "@/components/FamousBadge";
+import Avatar from "@/components/Avatar";
 import { getLeaderboard } from "@/lib/api/users";
 
 export const revalidate = 60;
@@ -43,11 +44,7 @@ export default async function LeaderboardPage({
                   >
                     {rank}
                   </div>
-                  {r.avatarUrl ? (
-                    <img src={r.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-panel2" />
-                  )}
+                  <Avatar src={r.avatarUrl} seed={r.id} size={40} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium truncate">{r.displayName}</span>

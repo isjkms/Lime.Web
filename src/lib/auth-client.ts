@@ -6,6 +6,8 @@ export type CurrentUser = {
   name: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  createdAt: string | null;
+  providers: string[];
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -29,6 +31,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       name: data.name ?? null,
       avatarUrl: data.avatarUrl ?? null,
       bio: data.bio ?? null,
+      createdAt: data.createdAt ?? null,
+      providers: Array.isArray(data.providers) ? data.providers : [],
     };
   } catch {
     return null;

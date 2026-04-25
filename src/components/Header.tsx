@@ -1,30 +1,17 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 import NotificationBell from "./NotificationBell";
 
 export default async function Header() {
-  const supabase = await createClient();
   const user = await getCurrentUser();
-  let points = 0;
-  let name = user?.name ?? "";
-  let avatar: string | null = user?.avatarUrl ?? null;
-  let isAdmin = false;
-  if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name, points, avatar_url, is_admin")
-      .eq("id", user.id).single();
-    if (data) {
-      points = data.points ?? 0;
-      name = data.display_name ?? name;
-      avatar = data.avatar_url ?? avatar;
-      isAdmin = !!data.is_admin;
-    }
-  }
+  // points와 isAdmin은 향후 #7(Points), #9(Reports) 이슈에서 연결.
+  const points = 0;
+  const isAdmin = false;
+  const name = user?.name ?? "";
+  const avatar: string | null = user?.avatarUrl ?? null;
   return (
     <header className="border-b border-border bg-panel/80 backdrop-blur-md sticky top-0 z-30">
       <div className="max-w-6xl mx-auto px-4 py-3">
@@ -46,7 +33,7 @@ export default async function Header() {
             </Link>
             {user && <NotificationBell userId={user.id} />}
             {user ? (
-              <UserMenu name={name || "사용자"} avatarUrl={avatar} points={points} isAdmin={isAdmin} />
+              <UserMenu userId={user.id} name={name || "사용자"} avatarUrl={avatar} points={points} isAdmin={isAdmin} />
             ) : (
               <Link href="/login" className="btn-primary text-sm">로그인</Link>
             )}
@@ -65,7 +52,7 @@ export default async function Header() {
               </Link>
               {user && <NotificationBell userId={user.id} />}
               {user ? (
-                <UserMenu name={name || "사용자"} avatarUrl={avatar} points={points} isAdmin={isAdmin} />
+                <UserMenu userId={user.id} name={name || "사용자"} avatarUrl={avatar} points={points} isAdmin={isAdmin} />
               ) : (
                 <Link href="/login" className="btn-primary text-sm">로그인</Link>
               )}

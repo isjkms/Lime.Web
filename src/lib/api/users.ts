@@ -28,6 +28,48 @@ export async function getUser(id: string, init?: RequestInit): Promise<UserProfi
   return res.json();
 }
 
+export async function updateMe(input: {
+  displayName?: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+}): Promise<void> {
+  const res = await fetch(apiUrl("/users/me"), {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    let msg = `${res.status}`;
+    try { const d = await res.json(); msg = d.error ?? msg; } catch {}
+    throw new Error(msg);
+  }
+}
+
+export async function uploadAvatar(file: File): Promise<{ url: string }> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(apiUrl("/users/me/avatar"), {
+    method: "POST",
+    credentials: "include",
+    body: fd,
+  });
+  if (!res.ok) {
+    let msg = `${res.status}`;
+    try { const d = await res.json(); msg = d.error ?? msg; } catch {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+export async function deleteMe(): Promise<void> {
+  const res = await fetch(apiUrl("/users/me"), {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+}
+
 export async function getLeaderboard(
   sort: "likes" | "count",
   limit = 100,

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import FamousBadge from "./FamousBadge";
+import Avatar from "./Avatar";
 
 type FeedItem = {
   id: string;
+  user_id: string;
   target_type: "track" | "album";
   target_id: string;
   rating: number;
@@ -33,11 +35,7 @@ export default function FamousFeed({ items }: { items: FeedItem[] }) {
           </Link>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              {r.profiles?.avatar_url ? (
-                <img src={r.profiles.avatar_url} className="w-5 h-5 rounded-full" alt="" />
-              ) : (
-                <div className="w-5 h-5 rounded-full bg-panel2" />
-              )}
+              <Avatar src={r.profiles?.avatar_url ?? null} seed={r.user_id} size={20} />
               <span className="text-sm font-medium">{r.profiles?.display_name ?? "익명"}</span>
               <FamousBadge />
               <span className="text-xs text-muted">· {new Date(r.created_at).toLocaleString("ko-KR")}</span>

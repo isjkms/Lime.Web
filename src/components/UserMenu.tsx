@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "@/lib/auth-client";
+import Avatar from "./Avatar";
 
 export default function UserMenu({
-  name, avatarUrl, points, isAdmin = false,
-}: { name: string; avatarUrl: string | null; points: number; isAdmin?: boolean }) {
+  userId, name, avatarUrl, points, isAdmin = false,
+}: { userId: string; name: string; avatarUrl: string | null; points: number; isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -24,13 +25,7 @@ export default function UserMenu({
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-panel2 transition"
       >
-        {avatarUrl ? (
-          <img src={avatarUrl} className="w-7 h-7 rounded-full" alt="" />
-        ) : (
-          <div className="w-7 h-7 rounded-full bg-panel2 border border-border flex items-center justify-center text-xs">
-            {name.slice(0, 1)}
-          </div>
-        )}
+        <Avatar src={avatarUrl} seed={userId} size={28} />
         <span className="hidden sm:inline text-xs text-muted max-w-[7rem] truncate">{name}</span>
         <span className="px-1.5 py-0.5 rounded-full bg-panel2 border border-border text-[10px] whitespace-nowrap">
           <span className="text-accent font-semibold">{points}</span>P

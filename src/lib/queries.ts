@@ -102,6 +102,7 @@ export async function getFamousRecentReviews(limit = 8) {
     if (!meta) return null;
     return {
       id: r.id,
+      user_id: r.user.id,
       target_type: r.target,
       target_id: meta.id,
       rating: r.rating,

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import FamousBadge from "@/components/FamousBadge";
+import Avatar from "@/components/Avatar";
 import { getUser } from "@/lib/api/users";
 import { listUserReviews } from "@/lib/api/reviews";
 
@@ -24,11 +25,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="space-y-6">
       <div className="card flex items-center gap-4">
-        {profile.avatarUrl ? (
-          <img src={profile.avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover" />
-        ) : (
-          <div className="w-20 h-20 rounded-full bg-panel2" />
-        )}
+        <Avatar src={profile.avatarUrl} seed={profile.id} size={80} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold truncate">{profile.displayName}</h1>

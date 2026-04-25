@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import FamousBadge from "./FamousBadge";
 import ReportModal from "./ReportModal";
+import Avatar from "./Avatar";
 import {
   listReviews, reactReview, unreactReview, deleteReview,
   type ReviewItem,
@@ -80,11 +81,7 @@ export default function ReviewList({
           <div key={r.id} className="card">
             <div className="flex items-start gap-3">
               <Link href={`/u/${r.user.id}`} aria-label="프로필">
-                {r.user.avatarUrl ? (
-                  <img src={r.user.avatarUrl} className="w-9 h-9 rounded-full" alt="" />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-panel2" />
-                )}
+                <Avatar src={r.user.avatarUrl} seed={r.user.id} size={36} />
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

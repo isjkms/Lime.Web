@@ -1,127 +1,197 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { getCurrentUser, signOut, spotifyConnectUrl, disconnectSpotify } from "@/lib/auth-client";
+import { signOut, spotifyConnectUrl, disconnectSpotify } from "@/lib/auth-client";
+import { updateMe, deleteMe, uploadAvatar } from "@/lib/api/users";
+import Avatar from "@/components/Avatar";
 
 export default function ProfileEditor({
+  userId,
   initialName,
   initialAvatar,
-  points,
-  nicknameChanges,
+  initialBio,
   spotifyConnected,
-  provider,
   joinedAt,
+  providers,
 }: {
+  userId: string;
   initialName: string;
   initialAvatar: string;
-  points: number;
-  nicknameChanges: number;
+  initialBio: string;
   spotifyConnected: boolean;
-  provider: string;
   joinedAt: string | null;
+  providers: string[];
 }) {
-  const supabase = createClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const returnTo = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
   const [name, setName] = useState(initialName);
   const [avatar, setAvatar] = useState(initialAvatar);
+  const [bio, setBio] = useState(initialBio);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [avatarMenu, setAvatarMenu] = useState(false);
+  const avatarBoxRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setMsg("파일이 2MB를 넘어요."); return; }
-    setUploading(true); setMsg(null);
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!avatarBoxRef.current?.contains(e.target as Node)) setAvatarMenu(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const persistAvatar = async (next: string | null) => {
+    setBusy(true); setMsg(null);
     try {
-      const user = await getCurrentUser();
-      if (!user) throw new Error("로그인이 필요해요.");
-      const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type,
-      });
-      if (upErr) throw new Error(upErr.message);
-      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      setAvatar(pub.publicUrl);
-      setMsg("업로드 완료. 저장을 눌러 반영해주세요.");
+      await updateMe({ avatarUrl: next });
+      setAvatar(next ?? "");
+      setMsg("아바타가 변경됐어요.");
+      router.refresh();
     } catch (err: any) {
-      setMsg("업로드 실패: " + (err?.message ?? String(err)));
+      const m = err?.message ?? "변경 실패";
+      setMsg(m === "invalid_avatar_url" ? "아바타 URL이 올바르지 않아요." : m);
     } finally {
-      setUploading(false);
+      setBusy(false);
     }
   };
 
-  const nameChanged = name.trim() !== initialName.trim();
-  const nicknameCost = nicknameChanges === 0 ? 0 : 500;
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setMsg("파일은 2MB 이하만 가능해요."); return; }
+    setBusy(true); setMsg(null);
+    try {
+      const { url } = await uploadAvatar(file);
+      setAvatar(url);
+      setMsg("아바타가 변경됐어요.");
+      router.refresh();
+    } catch (err: any) {
+      const m = err?.message ?? "업로드 실패";
+      const friendly =
+        m === "file_too_large" ? "파일은 2MB 이하만 가능해요." :
+        m === "invalid_content_type" ? "PNG/JPG/WEBP/GIF만 가능해요." :
+        m;
+      setMsg(friendly);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onUrlOption = async () => {
+    setAvatarMenu(false);
+    const next = window.prompt("아바타 이미지 URL을 입력하세요.", avatar);
+    if (next === null) return;
+    await persistAvatar(next.trim() || null);
+  };
+
+  const onResetOption = async () => {
+    setAvatarMenu(false);
+    await persistAvatar(null);
+  };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true); setMsg(null);
     try {
-      // 닉네임 변경은 RPC로 (포인트 차감 + 카운트 증가)
-      if (nameChanged) {
-        const confirmMsg = nicknameCost === 0
-          ? "닉네임을 변경할까요? (첫 변경은 무료)"
-          : `닉네임 변경은 500P가 차감돼요. 진행할까요?`;
-        if (!confirm(confirmMsg)) { setBusy(false); return; }
-        const { error } = await supabase.rpc("change_nickname", { p_name: name.trim() });
-        if (error) {
-          if (error.message.includes("not_enough_points")) throw new Error("포인트가 부족해요 (500P 필요).");
-          if (error.message.includes("invalid_name")) throw new Error("닉네임이 올바르지 않아요.");
-          throw new Error(error.message);
-        }
+      const payload: { displayName?: string; bio?: string | null } = {};
+      if (name.trim() !== initialName.trim()) payload.displayName = name.trim();
+      if (bio.trim() !== initialBio.trim()) payload.bio = bio.trim() || null;
+      if (Object.keys(payload).length === 0) {
+        setMsg("변경된 내용이 없어요.");
+        setBusy(false);
+        return;
       }
-
-      // 아바타 URL은 별도 업데이트
-      if (avatar.trim() !== initialAvatar.trim()) {
-        const user = await getCurrentUser();
-        if (!user) throw new Error("로그인이 필요해요.");
-        const { error } = await supabase.from("profiles")
-          .update({ avatar_url: avatar.trim() || null })
-          .eq("id", user.id);
-        if (error) throw new Error(error.message);
-      }
-
+      await updateMe(payload);
       setMsg("저장됐어요.");
       router.refresh();
     } catch (err: any) {
-      setMsg(err.message ?? "저장 실패");
+      const m = err?.message ?? "저장 실패";
+      const friendly =
+        m === "invalid_display_name" ? "닉네임은 1~32자여야 해요." :
+        m === "invalid_avatar_url" ? "아바타 URL이 올바르지 않아요." :
+        m === "invalid_bio" ? "소개는 200자 이하여야 해요." :
+        m;
+      setMsg(friendly);
     } finally {
       setBusy(false);
     }
   };
 
   const deleteAccount = async () => {
-    if (!confirm("정말 탈퇴할까요? 모든 평가·반응·프로필이 삭제되고 복구할 수 없어요.")) return;
+    if (!confirm("정말 탈퇴할까요? 모든 평가·반응·프로필이 비공개 처리되고 복구할 수 없어요.")) return;
     if (!confirm("마지막 확인입니다. 계속할까요?")) return;
     setBusy(true); setMsg(null);
-    const { error } = await supabase.rpc("delete_account");
-    if (error) { setMsg("탈퇴 실패: " + error.message); setBusy(false); return; }
-    await signOut();
-    router.replace("/");
+    try {
+      await deleteMe();
+      await signOut();
+      router.replace("/");
+    } catch (err: any) {
+      setMsg("탈퇴 실패: " + (err?.message ?? "알 수 없는 오류"));
+      setBusy(false);
+    }
   };
 
   return (
     <div className="space-y-4">
       <form onSubmit={save} className="card space-y-4">
-        <div className="flex items-center gap-4">
-          {avatar ? (
-            <img src={avatar} alt="" className="w-16 h-16 rounded-full border border-border object-cover" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-panel2" />
-          )}
-          <div className="flex-1">
-            <div className="text-sm text-muted">보유 포인트</div>
-            <div className="text-2xl font-bold text-accent">{points}P</div>
+        <div ref={avatarBoxRef} className="relative flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setAvatarMenu((v) => !v)}
+            disabled={busy}
+            className="relative group rounded-full focus:outline-none focus:ring-2 focus:ring-accent"
+            aria-haspopup="menu"
+            aria-expanded={avatarMenu}
+          >
+            <Avatar src={avatar || null} seed={userId} size={64} />
+            <span className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-medium">
+              변경
+            </span>
+          </button>
+          <div className="text-xs text-muted">
+            아바타를 눌러 변경하세요.
           </div>
+
+          {avatarMenu && (
+            <div
+              role="menu"
+              className="absolute left-0 top-[72px] z-20 w-56 rounded-xl border border-border bg-panel shadow-2xl overflow-hidden"
+            >
+              <button
+                type="button"
+                onClick={() => { setAvatarMenu(false); fileInputRef.current?.click(); }}
+                className="block w-full text-left px-4 py-2.5 hover:bg-panel2 text-sm"
+              >
+                📁 파일에서 업로드
+              </button>
+              <button
+                type="button"
+                onClick={onUrlOption}
+                className="block w-full text-left px-4 py-2.5 hover:bg-panel2 text-sm border-t border-border"
+              >
+                🔗 URL로 변경
+              </button>
+              <button
+                type="button"
+                onClick={onResetOption}
+                className="block w-full text-left px-4 py-2.5 hover:bg-panel2 text-sm border-t border-border text-muted"
+              >
+                🍋 기본 이미지로 변경
+              </button>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            onChange={onPickFile}
+          />
         </div>
 
         <label className="block">
@@ -131,45 +201,29 @@ export default function ProfileEditor({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            maxLength={24}
+            maxLength={32}
           />
-          <p className="text-xs text-muted mt-1">
-            {nicknameChanges === 0
-              ? "첫 변경은 무료예요."
-              : `다음 변경부터 500P가 차감돼요. (지금까지 ${nicknameChanges}회 변경)`}
-          </p>
         </label>
 
-        <div className="space-y-1.5">
-          <span className="text-sm text-muted">아바타</span>
-          <div className="flex items-center gap-2">
-            <input
-              className="input flex-1"
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              placeholder="이미지 URL 또는 파일 업로드"
-            />
-            <label className="text-sm px-3 py-2 rounded-md border border-border hover:bg-panel2 cursor-pointer whitespace-nowrap">
-              {uploading ? "업로드…" : "파일"}
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                className="hidden"
-                onChange={onFileUpload}
-                disabled={uploading || busy}
-              />
-            </label>
-          </div>
-          <p className="text-xs text-muted">PNG/JPG/WEBP/GIF · 최대 2MB</p>
-        </div>
+        <label className="block">
+          <span className="text-sm text-muted">소개</span>
+          <textarea
+            className="input mt-1"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            maxLength={200}
+            rows={3}
+            placeholder="자기소개 (200자 이내)"
+          />
+          <p className="text-xs text-muted mt-1 text-right">{bio.length} / 200</p>
+        </label>
 
         <button className="btn-primary w-full" disabled={busy}>
-          {busy ? "저장 중…" : nameChanged && nicknameCost > 0 ? "저장 (−500P)" : "저장"}
+          {busy ? "저장 중…" : "저장"}
         </button>
         {msg && <p className="text-sm text-center text-muted">{msg}</p>}
       </form>
 
-      {/* Spotify 연결 */}
       <div className="card">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -200,26 +254,28 @@ export default function ProfileEditor({
         </div>
       </div>
 
-      {/* 계정 정보 */}
       <div className="card space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted">로그인</span>
-          <span className="font-medium">{provider}</span>
-        </div>
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted">가입일</span>
           <span className="font-medium">
             {joinedAt ? new Date(joinedAt).toLocaleDateString("ko-KR") : "-"}
           </span>
         </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted">로그인 방식</span>
+          <span className="font-medium">
+            {providers.length === 0
+              ? "-"
+              : providers.map((p) => PROVIDER_LABEL[p.toLowerCase()] ?? p).join(", ")}
+          </span>
+        </div>
       </div>
 
-      {/* 계정 탈퇴 */}
       <div className="card border-red-900/50">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="font-medium text-red-400">계정 탈퇴</div>
-            <div className="text-xs text-muted">모든 데이터가 영구 삭제됩니다.</div>
+            <div className="text-xs text-muted">계정이 비활성화되고 더 이상 로그인할 수 없어요.</div>
           </div>
           <button
             onClick={deleteAccount}
@@ -233,6 +289,12 @@ export default function ProfileEditor({
     </div>
   );
 }
+
+const PROVIDER_LABEL: Record<string, string> = {
+  google: "Google",
+  kakao: "Kakao",
+  naver: "Naver",
+};
 
 function SpotifyIcon({ size = 24, mono = false }: { size?: number; mono?: boolean }) {
   const fill = mono ? "currentColor" : "#1db954";
