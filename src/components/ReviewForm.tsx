@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { listReviews, upsertReview } from "@/lib/api/reviews";
+import { POINTS } from "@/lib/api/points";
 
 export default function ReviewForm({
   targetType,
@@ -18,6 +19,7 @@ export default function ReviewForm({
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
+  const [existingCreatedAt, setExistingCreatedAt] = useState<string | null>(null);
   const [initial, setInitial] = useState<{ rating: number; comment: string } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -29,6 +31,7 @@ export default function ReviewForm({
         const mine = page.items.find((r) => r.user.id === userId);
         if (mine) {
           setExistingId(mine.id);
+          setExistingCreatedAt(mine.createdAt);
           setRating(Number(mine.rating));
           setComment(mine.body ?? "");
           setInitial({ rating: Number(mine.rating), comment: mine.body ?? "" });
@@ -54,10 +57,26 @@ export default function ReviewForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
+
+    const body = comment.trim();
+    if (!body) { setErr("한 줄 평을 입력해 주세요."); return; }
+
+    let confirmMsg: string;
+    if (!isEdit) {
+      confirmMsg = `평가를 등록할까요?\n작성 시 ${POINTS.reviewCreated}P가 적립돼요.`;
+    } else {
+      const ageMs = existingCreatedAt
+        ? Date.now() - new Date(existingCreatedAt).getTime()
+        : Number.POSITIVE_INFINITY;
+      const withinGrace = ageMs <= POINTS.graceMinutes * 60 * 1000;
+      confirmMsg = withinGrace
+        ? `작성 후 ${POINTS.graceMinutes}분 이내라 무료로 수정돼요. 진행할까요?`
+        : `수정하면 ${POINTS.reviewEdit}P가 차감되고 "(수정됨)" 라벨이 붙어요. 진행할까요?`;
+    }
+    if (!confirm(confirmMsg)) return;
+
     setBusy(true);
     try {
-      const body = comment.trim();
-      if (!body) { setErr("한 줄 평을 입력해 주세요."); return; }
       await upsertReview({ target: targetType, spotifyId: targetId, rating, body });
       setInitial({ rating, comment: body });
       window.dispatchEvent(new CustomEvent("reviews:changed", { detail: { targetType, targetId } }));
@@ -65,10 +84,14 @@ export default function ReviewForm({
       if (!existingId) {
         const page = await listReviews(targetType, targetId, { pageSize: 50 });
         const mine = page.items.find((r) => r.user.id === userId);
-        if (mine) setExistingId(mine.id);
+        if (mine) {
+          setExistingId(mine.id);
+          setExistingCreatedAt(mine.createdAt);
+        }
       }
     } catch (e: any) {
-      setErr(e?.message ?? "저장 실패");
+      const m = e?.message ?? "저장 실패";
+      setErr(m === "not_enough_points" ? `포인트가 부족해요 (${POINTS.reviewEdit}P 필요).` : m);
     } finally {
       setBusy(false);
     }
@@ -100,13 +123,13 @@ export default function ReviewForm({
       </div>
       <input
         className="input"
-        placeholder="한 줄 평 (최대 140자)"
-        maxLength={140}
+        placeholder="한 줄 평 (최대 100자)"
+        maxLength={100}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted">{comment.length}/140</span>
+        <span className="text-xs text-muted">{comment.length}/100</span>
         <button className="btn-primary" disabled={busy || (isEdit && !changed)}>
           {isEdit ? (busy ? "수정 중…" : "수정") : (busy ? "등록 중…" : "평가 등록")}
         </button>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/me", label: "정보" },
   { href: "/me/reviews", label: "내 후기" },
+  { href: "/me/points", label: "포인트" },
 ];
 
 export default function MeTabs() {

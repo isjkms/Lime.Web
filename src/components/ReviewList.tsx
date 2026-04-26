@@ -9,6 +9,7 @@ import {
   listReviews, reactReview, unreactReview, deleteReview,
   type ReviewItem,
 } from "@/lib/api/reviews";
+import { POINTS } from "@/lib/api/points";
 
 export default function ReviewList({
   targetType,
@@ -60,14 +61,20 @@ export default function ReviewList({
     }
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("평가를 삭제하시겠어요?")) return;
+  const remove = async (id: string, createdAt: string) => {
+    const ageMs = Date.now() - new Date(createdAt).getTime();
+    const withinGrace = ageMs <= POINTS.graceMinutes * 60 * 1000;
+    const msg = withinGrace
+      ? `작성 후 ${POINTS.graceMinutes}분 이내라 무료로 삭제돼요. 진행할까요?`
+      : `삭제하면 ${POINTS.reviewDelete}P가 차감돼요. 진행할까요?`;
+    if (!confirm(msg)) return;
     try {
       await deleteReview(id);
       window.dispatchEvent(new CustomEvent("reviews:changed", { detail: { targetType, targetId } }));
       router.refresh();
     } catch (e: any) {
-      alert(e?.message ?? "삭제 실패");
+      const m = e?.message ?? "삭제 실패";
+      alert(m === "not_enough_points" ? `포인트가 부족해요 (${POINTS.reviewDelete}P 필요).` : m);
     }
   };
 
@@ -91,6 +98,7 @@ export default function ReviewList({
                   {r.user.reviewCount >= 1000 && r.user.likesReceived >= 1000 && <FamousBadge />}
                   <span className="text-accent font-bold">{Number(r.rating).toFixed(1)}</span>
                   <span className="text-xs text-muted">{new Date(r.createdAt).toLocaleString("ko-KR")}</span>
+                  {r.edited && <span className="text-[10px] text-muted">(수정됨)</span>}
                 </div>
                 {r.body && <p className="mt-1">{r.body}</p>}
                 <div className="flex items-center gap-4 mt-2 text-sm">
@@ -129,7 +137,7 @@ export default function ReviewList({
                     </button>
                   )}
                   {mine && (
-                    <button onClick={() => remove(r.id)} className="ml-auto text-muted hover:text-red-400">
+                    <button onClick={() => remove(r.id, r.createdAt)} className="ml-auto text-muted hover:text-red-400">
                       삭제
                     </button>
                   )}

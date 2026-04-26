@@ -7,8 +7,8 @@ import NotificationBell from "./NotificationBell";
 
 export default async function Header() {
   const user = await getCurrentUser();
-  // points와 isAdmin은 향후 #7(Points), #9(Reports) 이슈에서 연결.
-  const points = 0;
+  // isAdmin은 향후 #9(Reports) 이슈에서 연결.
+  const points = user?.points ?? 0;
   const isAdmin = false;
   const name = user?.name ?? "";
   const avatar: string | null = user?.avatarUrl ?? null;

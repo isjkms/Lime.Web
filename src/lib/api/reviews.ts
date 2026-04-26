@@ -17,6 +17,7 @@ export type ReviewItem = {
   body: string;
   createdAt: string;
   updatedAt: string;
+  edited: boolean;
   user: ReviewUser;
   target: "track" | "album";
   track: { id: string; spotifyId: string; name: string; albumId: string | null; coverUrl: string | null; artists: { spotifyId: string; name: string }[] } | null;

@@ -33,6 +33,7 @@ export default async function MePage() {
         providers={user.providers}
         followersCount={profile?.followersCount ?? 0}
         followingCount={profile?.followingCount ?? 0}
+        nicknameChanges={user.nicknameChanges}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { signOut, spotifyConnectUrl, disconnectSpotify } from "@/lib/auth-client";
 import { updateMe, deleteMe, uploadAvatar } from "@/lib/api/users";
+import { POINTS } from "@/lib/api/points";
 import Avatar from "@/components/Avatar";
 
 export default function ProfileEditor({
@@ -17,6 +18,7 @@ export default function ProfileEditor({
   providers,
   followersCount,
   followingCount,
+  nicknameChanges,
 }: {
   userId: string;
   email: string;
@@ -28,6 +30,7 @@ export default function ProfileEditor({
   providers: string[];
   followersCount: number;
   followingCount: number;
+  nicknameChanges: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -102,16 +105,19 @@ export default function ProfileEditor({
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload: { displayName?: string; bio?: string | null } = {};
+    const nameChanged = name.trim() !== initialName.trim();
+    if (nameChanged) payload.displayName = name.trim();
+    if (bio.trim() !== initialBio.trim()) payload.bio = bio.trim() || null;
+    if (Object.keys(payload).length === 0) {
+      setMsg("변경된 내용이 없어요.");
+      return;
+    }
+    if (nameChanged && nicknameChanges >= 1) {
+      if (!confirm(`닉네임 변경에 ${POINTS.nicknameChange}P가 차감돼요. 진행할까요?`)) return;
+    }
     setBusy(true); setMsg(null);
     try {
-      const payload: { displayName?: string; bio?: string | null } = {};
-      if (name.trim() !== initialName.trim()) payload.displayName = name.trim();
-      if (bio.trim() !== initialBio.trim()) payload.bio = bio.trim() || null;
-      if (Object.keys(payload).length === 0) {
-        setMsg("변경된 내용이 없어요.");
-        setBusy(false);
-        return;
-      }
       await updateMe(payload);
       setMsg("저장됐어요.");
       router.refresh();
@@ -121,6 +127,7 @@ export default function ProfileEditor({
         m === "invalid_display_name" ? "닉네임은 1~32자여야 해요." :
         m === "invalid_avatar_url" ? "아바타 URL이 올바르지 않아요." :
         m === "invalid_bio" ? "소개는 200자 이하여야 해요." :
+        m === "not_enough_points" ? `포인트가 부족해요 (${POINTS.nicknameChange}P 필요).` :
         m;
       setMsg(friendly);
     } finally {
@@ -235,6 +242,11 @@ export default function ProfileEditor({
             required
             maxLength={32}
           />
+          <p className="text-xs text-muted mt-1">
+            {nicknameChanges === 0
+              ? "첫 변경은 무료예요."
+              : `다음 변경부터 ${POINTS.nicknameChange}P가 차감돼요. (지금까지 ${nicknameChanges}회 변경)`}
+          </p>
         </label>
 
         <label className="block">

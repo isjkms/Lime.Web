@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteReview, type ReviewItem } from "@/lib/api/reviews";
+import { POINTS } from "@/lib/api/points";
 
 export default function MyReviewsClient({
   initialItems,
@@ -15,15 +16,21 @@ export default function MyReviewsClient({
   const [list, setList] = useState(initialItems);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const remove = async (id: string) => {
-    if (!confirm("이 후기를 삭제할까요?")) return;
+  const remove = async (id: string, createdAt: string) => {
+    const ageMs = Date.now() - new Date(createdAt).getTime();
+    const withinGrace = ageMs <= POINTS.graceMinutes * 60 * 1000;
+    const msg = withinGrace
+      ? `작성 후 ${POINTS.graceMinutes}분 이내라 무료로 삭제돼요. 진행할까요?`
+      : `삭제하면 ${POINTS.reviewDelete}P가 차감돼요. 진행할까요?`;
+    if (!confirm(msg)) return;
     setBusy(id);
     try {
       await deleteReview(id);
       setList((prev) => prev.filter((r) => r.id !== id));
       router.refresh();
     } catch (e: any) {
-      alert(e?.message ?? "삭제 실패");
+      const m = e?.message ?? "삭제 실패";
+      alert(m === "not_enough_points" ? `포인트가 부족해요 (${POINTS.reviewDelete}P 필요).` : m);
     } finally {
       setBusy(null);
     }
@@ -69,11 +76,12 @@ export default function MyReviewsClient({
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-2xl font-bold text-accent">{Number(r.rating).toFixed(1)}</span>
                     <span className="text-xs text-muted">{new Date(r.createdAt).toLocaleString("ko-KR")}</span>
+                    {r.edited && <span className="text-[10px] text-muted">(수정됨)</span>}
                   </div>
                   {r.body && <p className="mt-1 text-sm">{r.body}</p>}
                 </div>
                 <button
-                  onClick={() => remove(r.id)}
+                  onClick={() => remove(r.id, r.createdAt)}
                   disabled={busy === r.id}
                   className="btn text-xs text-red-400 disabled:opacity-50"
                 >

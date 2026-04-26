@@ -6,6 +6,8 @@ export type CurrentUser = {
   name: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  points: number;
+  nicknameChanges: number;
   createdAt: string | null;
   providers: string[];
 };
@@ -53,6 +55,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       name: data.name ?? null,
       avatarUrl: data.avatarUrl ?? null,
       bio: data.bio ?? null,
+      points: typeof data.points === "number" ? data.points : 0,
+      nicknameChanges: typeof data.nicknameChanges === "number" ? data.nicknameChanges : 0,
       createdAt: data.createdAt ?? null,
       providers: Array.isArray(data.providers) ? data.providers : [],
     };
