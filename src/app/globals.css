@@ -102,3 +102,11 @@ input[type="range"].slider::-moz-range-thumb {
   background: #fff;
   border: 2px solid #ff5c8a;
 }
+
+@keyframes toastIn {
+  0%   { opacity: 0; transform: translate3d(20px, -8px, 0) scale(0.96); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+.toast-enter {
+  animation: toastIn 220ms cubic-bezier(.16,.84,.32,1.04);
+}

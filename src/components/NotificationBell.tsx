@@ -1,44 +1,61 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Avatar from "./Avatar";
+import {
+  listNotifications, getUnreadCount, markAllSeen,
+  dismissNotification, clearAllNotifications, notificationStreamUrl,
+  type NotificationItem,
+} from "@/lib/api/notifications";
 
-type Notif = {
-  id: string;
-  type: "review_like" | "follow";
-  data: any;
-  read_at: string | null;
-  created_at: string;
-  actor_id: string | null;
-  actor_name: string | null;
-  actor_avatar: string | null;
-};
+const TOAST_DURATION_MS = 5000;
 
 export default function NotificationBell({ userId }: { userId: string }) {
-  const supabase = createClient();
-  const [items, setItems] = useState<Notif[]>([]);
+  const router = useRouter();
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
+  const [toasts, setToasts] = useState<NotificationItem[]>([]);
   const ref = useRef<HTMLDivElement | null>(null);
-  const unread = items.filter((n) => !n.read_at).length;
 
-  const load = async () => {
-    const { data } = await supabase.rpc("get_notifications", { p_limit: 30 });
-    setItems((data ?? []) as Notif[]);
-  };
+  const dismissToast = useCallback((id: string) => {
+    setToasts((xs) => xs.filter((t) => t.id !== id));
+  }, []);
+
+  const reload = useCallback(async () => {
+    const [list, uc] = await Promise.all([listNotifications(30), getUnreadCount()]);
+    setItems(list);
+    setUnread(uc);
+  }, []);
 
   useEffect(() => {
-    load();
-    // Strict Mode 재마운트 시 같은 이름의 채널이 재사용되어 subscribe 이후 .on 호출이 막힘.
-    // 매 마운트마다 고유 채널명을 사용.
-    const uniq = `notif-${userId}-${Math.random().toString(36).slice(2, 10)}`;
-    const ch = supabase.channel(uniq);
-    ch.on(
-      "postgres_changes",
-      { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-      () => load()
-    ).subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [userId]);
+    reload();
+
+    // SSE 구독 — 새 알림 도착 시 즉시 반영
+    const es = new EventSource(notificationStreamUrl(), { withCredentials: true });
+    es.onmessage = (e) => {
+      try {
+        const dto = JSON.parse(e.data) as NotificationItem;
+        setItems((prev) => {
+          if (prev.some((x) => x.id === dto.id)) return prev;
+          return [dto, ...prev].slice(0, 30);
+        });
+        setUnread((c) => c + 1);
+        // 토스트로 잠깐 띄우고 자동 제거
+        setToasts((xs) => (xs.some((t) => t.id === dto.id) ? xs : [dto, ...xs].slice(0, 4)));
+        setTimeout(() => dismissToast(dto.id), TOAST_DURATION_MS);
+      } catch {}
+    };
+    // 끊기면 브라우저가 자동 재연결. 별도 처리 불필요.
+
+    const onFocus = () => reload();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      es.close();
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [userId, reload]);
 
   useEffect(() => {
     const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
@@ -50,14 +67,69 @@ export default function NotificationBell({ userId }: { userId: string }) {
     const next = !open;
     setOpen(next);
     if (next && unread > 0) {
-      await supabase.rpc("mark_notifications_read");
-      // optimistic
-      setItems((xs) => xs.map((n) => (n.read_at ? n : { ...n, read_at: new Date().toISOString() })));
+      setUnread(0);
+      setItems((xs) => xs.map((n) => (n.read ? n : { ...n, read: true })));
+      try { await markAllSeen(); } catch {}
     }
+  };
+
+  const onItemClick = (n: NotificationItem) => {
+    setOpen(false);
+    if (n.link) router.push(n.link);
+  };
+
+  const onDismiss = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setItems((xs) => xs.filter((n) => n.id !== id));
+    try { await dismissNotification(id); } catch {}
+  };
+
+  const onClearAll = async () => {
+    setItems([]);
+    setUnread(0);
+    try { await clearAllNotifications(); } catch {}
+  };
+
+  const onToastClick = (n: NotificationItem) => {
+    dismissToast(n.id);
+    if (n.link) router.push(n.link);
   };
 
   return (
     <div ref={ref} className="relative">
+      {toasts.length > 0 && (
+        <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+          {toasts.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => onToastClick(n)}
+              className="pointer-events-auto flex items-start gap-3 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-panel/95 backdrop-blur-md shadow-2xl px-4 py-3 text-left toast-enter hover:bg-panel2 transition"
+            >
+              <Avatar
+                src={n.actor?.avatarUrl ?? null}
+                seed={n.actor?.id ?? n.id}
+                size={36}
+              />
+              <div className="flex-1 min-w-0 text-sm">
+                <div className="font-semibold text-xs text-muted mb-0.5">Lime ♪ 알림</div>
+                <div className="line-clamp-2">{n.message}</div>
+              </div>
+              <span
+                role="button"
+                aria-label="닫기"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismissToast(n.id);
+                }}
+                className="text-muted hover:text-white text-base leading-none px-1 -my-1 cursor-pointer"
+              >
+                ×
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <button
         onClick={toggle}
         aria-label="알림"
@@ -76,14 +148,42 @@ export default function NotificationBell({ userId }: { userId: string }) {
 
       {open && (
         <div className="absolute right-0 mt-2 w-80 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-panel shadow-2xl z-50">
-          <div className="px-4 py-3 border-b border-border text-sm font-semibold">알림</div>
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between text-sm">
+            <span className="font-semibold">알림</span>
+            {items.length > 0 && (
+              <button onClick={onClearAll} className="text-xs text-muted hover:text-red-400">
+                모두 비우기
+              </button>
+            )}
+          </div>
           {!items.length ? (
             <div className="px-4 py-6 text-sm text-muted text-center">알림이 없어요.</div>
           ) : (
             <ul>
               {items.map((n) => (
-                <li key={n.id} className={!n.read_at ? "bg-panel2/40" : ""}>
-                  <NotifRow n={n} onNav={() => setOpen(false)} />
+                <li
+                  key={n.id}
+                  onClick={() => onItemClick(n)}
+                  className={`flex items-start gap-3 px-4 py-2.5 cursor-pointer hover:bg-panel2 ${
+                    n.read ? "opacity-60" : "bg-panel2/40"
+                  }`}
+                >
+                  <Avatar
+                    src={n.actor?.avatarUrl ?? null}
+                    seed={n.actor?.id ?? n.id}
+                    size={32}
+                  />
+                  <div className="flex-1 min-w-0 text-sm">
+                    <div className="truncate">{n.message}</div>
+                    <div className="text-[11px] text-muted mt-0.5">{timeAgo(n.createdAt)}</div>
+                  </div>
+                  <button
+                    onClick={(e) => onDismiss(e, n.id)}
+                    aria-label="알림 닫기"
+                    className="text-muted hover:text-white text-base leading-none px-1 -my-1"
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
@@ -91,47 +191,6 @@ export default function NotificationBell({ userId }: { userId: string }) {
         </div>
       )}
     </div>
-  );
-}
-
-function NotifRow({ n, onNav }: { n: Notif; onNav: () => void }) {
-  const when = timeAgo(n.created_at);
-  if (n.type === "review_like") {
-    const href = n.data?.target_type && n.data?.target_id
-      ? `/${n.data.target_type}s/${n.data.target_id}`
-      : "#";
-    return (
-      <Link href={href} onClick={onNav} className="flex items-center gap-3 px-4 py-2.5 hover:bg-panel2">
-        <Avatar src={n.actor_avatar} />
-        <div className="flex-1 min-w-0 text-sm">
-          <span className="font-medium">{n.actor_name ?? "누군가"}</span>
-          <span className="text-muted">님이 내 후기를 좋아합니다</span>
-          <div className="text-[11px] text-muted mt-0.5">{when}</div>
-        </div>
-        <span>👍</span>
-      </Link>
-    );
-  }
-  if (n.type === "follow" && n.actor_id) {
-    return (
-      <Link href={`/u/${n.actor_id}`} onClick={onNav} className="flex items-center gap-3 px-4 py-2.5 hover:bg-panel2">
-        <Avatar src={n.actor_avatar} />
-        <div className="flex-1 min-w-0 text-sm">
-          <span className="font-medium">{n.actor_name ?? "누군가"}</span>
-          <span className="text-muted">님이 팔로우했어요</span>
-          <div className="text-[11px] text-muted mt-0.5">{when}</div>
-        </div>
-      </Link>
-    );
-  }
-  return null;
-}
-
-function Avatar({ src }: { src: string | null }) {
-  return src ? (
-    <img src={src} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
-  ) : (
-    <div className="w-8 h-8 rounded-full bg-panel2 shrink-0" />
   );
 }
 

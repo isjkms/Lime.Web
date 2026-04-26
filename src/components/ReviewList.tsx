@@ -48,6 +48,19 @@ export default function ReviewList({
     };
   }, [targetType, targetId, currentUserId]);
 
+  // 알림 등에서 #review-{id}로 진입했을 때 스크롤 + 잠깐 하이라이트
+  useEffect(() => {
+    if (!reviews.length) return;
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (!hash.startsWith("#review-")) return;
+    const el = document.getElementById(hash.slice(1));
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-accent");
+    const t = setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2500);
+    return () => clearTimeout(t);
+  }, [reviews]);
+
   const react = async (reviewId: string, kind: "like" | "dislike") => {
     if (!currentUserId) { router.push("/login"); return; }
     const current = reviews.find((r) => r.id === reviewId);
@@ -85,7 +98,11 @@ export default function ReviewList({
       {reviews.map((r) => {
         const mine = r.user.id === currentUserId;
         return (
-          <div key={r.id} className="card">
+          <div
+            key={r.id}
+            id={`review-${r.id}`}
+            className="card scroll-mt-24 transition"
+          >
             <div className="flex items-start gap-3">
               <Link href={`/u/${r.user.id}`} aria-label="프로필">
                 <Avatar src={r.user.avatarUrl} seed={r.user.id} size={36} />
