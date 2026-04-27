@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import FamousBadge from "./FamousBadge";
-import ReportModal from "./ReportModal";
 import Avatar from "./Avatar";
 import {
   listReviews, reactReview, unreactReview, deleteReview,
@@ -22,7 +21,6 @@ export default function ReviewList({
 }) {
   const router = useRouter();
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
-  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -144,15 +142,6 @@ export default function ReviewList({
                       </button>
                     </>
                   )}
-                  {!mine && currentUserId && (
-                    <button
-                      onClick={() => setReportTarget(r.id)}
-                      className="ml-auto text-muted hover:text-amber text-xs"
-                      title="이 후기를 신고합니다"
-                    >
-                      🚩 신고
-                    </button>
-                  )}
                   {mine && (
                     <button onClick={() => remove(r.id, r.createdAt)} className="ml-auto text-muted hover:text-red-400">
                       삭제
@@ -164,9 +153,6 @@ export default function ReviewList({
           </div>
         );
       })}
-      {reportTarget && (
-        <ReportModal reviewId={reportTarget} onClose={() => setReportTarget(null)} />
-      )}
     </div>
   );
 }

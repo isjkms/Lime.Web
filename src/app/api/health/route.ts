@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createPublicClient } from "@/lib/supabase/public";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -18,21 +17,24 @@ async function timed(fn: () => Promise<unknown>): Promise<Check> {
 }
 
 export async function GET() {
-  const [db, spotify] = await Promise.all([
+  const apiBase = API_BASE.replace(/\/$/, "");
+  const [api, spotify] = await Promise.all([
     timed(async () => {
-      const sb = createPublicClient();
-      const { error } = await sb.from("profiles").select("id", { head: true, count: "exact" }).limit(1);
-      if (error) throw new Error(error.message);
+      if (!apiBase) throw new Error("no_api_base");
+      const res = await fetch(`${apiBase}/health/db`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`status_${res.status}`);
+      const d = await res.json();
+      if (!d.ok) throw new Error("db_unavailable");
     }),
     timed(async () => {
-      if (!API_BASE) throw new Error("no_api_base");
-      const res = await fetch(`${API_BASE.replace(/\/$/, "")}/spotify/search?q=ping`, { cache: "no-store" });
+      if (!apiBase) throw new Error("no_api_base");
+      const res = await fetch(`${apiBase}/spotify/search?q=ping`, { cache: "no-store" });
       if (!res.ok) throw new Error(`status_${res.status}`);
     }),
   ]);
-  const ok = db.ok && spotify.ok;
+  const ok = api.ok && spotify.ok;
   return NextResponse.json(
-    { ok, db, spotify, at: new Date().toISOString() },
+    { ok, api, spotify, at: new Date().toISOString() },
     { status: ok ? 200 : 503 }
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
 
-const LS_KEY = "murate.recentSearches";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const apiUrl = (p: string) => `${API_BASE.replace(/\/$/, "")}${p}`;
+
+const LS_KEY = "lime.recentSearches";
 const MAX_RECENT = 8;
 
 function loadRecent(): string[] {
@@ -13,6 +15,8 @@ function loadRecent(): string[] {
 function saveRecent(list: string[]) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(list.slice(0, MAX_RECENT))); } catch {}
 }
+
+type TopRow = { name: string };
 
 export default function SearchBar() {
   const router = useRouter();
@@ -26,17 +30,17 @@ export default function SearchBar() {
   useEffect(() => { setQ(sp.get("q") ?? ""); }, [sp]);
   useEffect(() => { setRecent(loadRecent()); }, []);
 
-  // 트렌딩 제안: 탑 차트 곡 제목 일부 (한 번만)
+  // 트렌딩 제안: Lime.Api /catalog/top-rated 최근 1년 기준 트랙 6개
   useEffect(() => {
     (async () => {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.rpc("get_top_rated_tracks", { p_limit: 6, p_min_reviews: 1 });
-        const titles = (data ?? [])
-          .map((r: any) => r.title as string)
-          .filter(Boolean)
-          .slice(0, 6);
-        setTrending(titles);
+        const res = await fetch(
+          apiUrl("/catalog/top-rated?target=track&period=year&limit=6"),
+          { cache: "no-store" },
+        );
+        if (!res.ok) return;
+        const rows: TopRow[] = await res.json();
+        setTrending(rows.map((r) => r.name).filter(Boolean).slice(0, 6));
       } catch {}
     })();
   }, []);
@@ -87,6 +91,9 @@ export default function SearchBar() {
         onFocus={() => setOpen(true)}
         placeholder="음악, 앨범, 아티스트 검색"
         className="w-full bg-panel2 border border-border rounded-full px-4 py-2 pl-10 text-sm outline-none focus:border-accent transition"
+        autoComplete="off"
+        spellCheck={false}
+        type="search"
         suppressHydrationWarning
       />
       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted">⌕</span>
@@ -97,7 +104,7 @@ export default function SearchBar() {
             <div className="p-2">
               <div className="flex items-center justify-between px-2 py-1">
                 <span className="text-[11px] uppercase tracking-wide text-muted">최근 검색</span>
-                <button onClick={clearAll} className="text-[11px] text-muted hover:text-white">
+                <button type="button" onClick={clearAll} className="text-[11px] text-muted hover:text-white">
                   전체 삭제
                 </button>
               </div>
