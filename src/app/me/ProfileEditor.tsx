@@ -162,7 +162,7 @@ export default function ProfileEditor({
             aria-expanded={avatarMenu}
           >
             <Avatar src={avatar || null} seed={userId} size={64} />
-            <span className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-medium">
+            <span className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-fg text-xs font-medium">
               변경
             </span>
           </button>
@@ -211,15 +211,15 @@ export default function ProfileEditor({
         <div className="flex gap-4 text-sm">
           <Link
             href={`/u/${userId}/followers`}
-            className="hover:text-white text-muted"
+            className="hover:text-fg text-muted"
           >
-            <b className="text-white">{followersCount}</b> 팔로워
+            <b className="text-fg">{followersCount}</b> 팔로워
           </Link>
           <Link
             href={`/u/${userId}/following`}
-            className="hover:text-white text-muted"
+            className="hover:text-fg text-muted"
           >
-            <b className="text-white">{followingCount}</b> 팔로잉
+            <b className="text-fg">{followingCount}</b> 팔로잉
           </Link>
         </div>
 

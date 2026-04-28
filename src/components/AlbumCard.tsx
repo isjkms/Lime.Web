@@ -38,7 +38,7 @@ export default function AlbumCard({ album }: { album: Album }) {
           </div>
         ) : null}
         {album.last_review_at && (
-          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] tabular-nums text-white/90">
+          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] tabular-nums text-fg/90">
             {hm(album.last_review_at)}
           </div>
         )}

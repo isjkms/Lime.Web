@@ -6,6 +6,7 @@ const TABS = [
   { href: "/me", label: "정보" },
   { href: "/me/reviews", label: "내 후기" },
   { href: "/me/points", label: "포인트" },
+  { href: "/me/settings", label: "설정" },
 ];
 
 export default function MeTabs() {
@@ -23,8 +24,8 @@ export default function MeTabs() {
             className={
               "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition " +
               (active
-                ? "border-accent text-white"
-                : "border-transparent text-muted hover:text-white")
+                ? "border-accent text-fg"
+                : "border-transparent text-muted hover:text-fg")
             }
           >
             {t.label}

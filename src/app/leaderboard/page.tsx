@@ -78,8 +78,8 @@ function TabLink({
   return (
     <Link
       href={href}
-      className={`px-4 py-2 transition ${active ? "text-white" : "text-muted hover:text-white"}`}
-      style={active ? { background: "linear-gradient(135deg, #ff5c8a, #a78bfa)" } : undefined}
+      className={`px-4 py-2 transition ${active ? "text-[#1a2410] font-semibold" : "text-muted hover:text-fg"}`}
+      style={active ? { background: "linear-gradient(135deg, #bef264, #facc15)" } : undefined}
     >
       {children}
     </Link>

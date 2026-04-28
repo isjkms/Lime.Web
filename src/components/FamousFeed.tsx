@@ -44,7 +44,7 @@ export default function FamousFeed({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Avatar src={r.profiles?.avatar_url ?? null} seed={r.user_id} size={20} />
-              <Link href={`/u/${r.user_id}`} className="text-sm font-medium hover:text-white hover:underline underline-offset-2">
+              <Link href={`/u/${r.user_id}`} className="text-sm font-medium hover:text-fg hover:underline underline-offset-2">
                 {r.profiles?.display_name ?? "익명"}
               </Link>
               {showFamousBadge && <FamousBadge />}
@@ -60,7 +60,7 @@ export default function FamousFeed({
                 <span className="text-muted"> — {r.item.artist}</span>
               </Link>
             </div>
-            {r.comment && <p className="mt-1 text-sm text-white/90">{r.comment}</p>}
+            {r.comment && <p className="mt-1 text-sm text-fg/90">{r.comment}</p>}
           </div>
         </div>
       ))}

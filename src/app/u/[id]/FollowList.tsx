@@ -21,7 +21,7 @@ export default async function FollowList({
   return (
     <div className="space-y-4">
       <div>
-        <Link href={backHref} className="text-sm text-muted hover:text-white">← 프로필로</Link>
+        <Link href={backHref} className="text-sm text-muted hover:text-fg">← 프로필로</Link>
         <h1 className="text-2xl font-bold mt-2">{title}</h1>
         <p className="text-sm text-muted mt-1">총 {total}명</p>
       </div>
@@ -34,7 +34,7 @@ export default async function FollowList({
             const isMe = viewer?.id === u.id;
             return (
               <li key={u.id} className="card flex items-center gap-3">
-                <Link href={`/u/${u.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:text-white">
+                <Link href={`/u/${u.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:text-fg">
                   <Avatar src={u.avatarUrl} seed={u.id} size={40} />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{u.displayName}</div>

@@ -121,7 +121,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
                   e.stopPropagation();
                   dismissToast(n.id);
                 }}
-                className="text-muted hover:text-white text-base leading-none px-1 -my-1 cursor-pointer"
+                className="text-muted hover:text-fg text-base leading-none px-1 -my-1 cursor-pointer"
               >
                 ×
               </span>
@@ -140,7 +140,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-[10px] font-bold text-white flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-accent text-[10px] font-bold text-fg flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -180,7 +180,7 @@ export default function NotificationBell({ userId }: { userId: string }) {
                   <button
                     onClick={(e) => onDismiss(e, n.id)}
                     aria-label="알림 닫기"
-                    className="text-muted hover:text-white text-base leading-none px-1 -my-1"
+                    className="text-muted hover:text-fg text-base leading-none px-1 -my-1"
                   >
                     ×
                   </button>

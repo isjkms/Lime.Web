@@ -77,11 +77,11 @@ export default function RecentTrackCard({ track }: { track: Track }) {
           className="absolute inset-0 flex items-center justify-center group/play"
         >
           <span
-            className={`w-11 h-11 rounded-full flex items-center justify-center text-white transition
+            className={`w-11 h-11 rounded-full flex items-center justify-center text-fg transition
               ${playing ? "opacity-100 scale-100" : "opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"}
               ${!canPlay ? "!opacity-40 cursor-not-allowed" : ""}`}
             style={{
-              background: "linear-gradient(135deg, #ff5c8a, #a78bfa)",
+              background: "linear-gradient(135deg, #bef264, #facc15)",
               boxShadow: "0 6px 16px -4px rgba(0,0,0,0.5)",
             }}
           >
@@ -98,7 +98,7 @@ export default function RecentTrackCard({ track }: { track: Track }) {
           </div>
         ) : null}
         {track.last_review_at && (
-          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] tabular-nums text-white/90">
+          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur text-[10px] tabular-nums text-fg/90">
             {hm(track.last_review_at)}
           </div>
         )}

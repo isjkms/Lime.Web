@@ -8,7 +8,7 @@ export default function ShareButton({ title, path }: { title: string; path: stri
     const url = typeof window !== "undefined" ? new URL(path, window.location.origin).toString() : path;
     try {
       if (typeof navigator !== "undefined" && (navigator as any).share) {
-        await (navigator as any).share({ title: `Murate · ${title}`, url });
+        await (navigator as any).share({ title: `Lime · ${title}`, url });
         return;
       }
       await navigator.clipboard.writeText(url);
@@ -22,7 +22,7 @@ export default function ShareButton({ title, path }: { title: string; path: stri
   return (
     <button
       onClick={share}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm text-muted hover:text-white hover:border-accent transition"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-sm text-muted hover:text-fg hover:border-accent transition"
       aria-label="공유"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

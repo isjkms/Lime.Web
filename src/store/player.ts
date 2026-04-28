@@ -50,7 +50,7 @@ export const usePlayer = create<PlayerState>()(
       seek: (ms) => set((s) => ({ seekToken: s.seekToken + 1, seekMs: ms, positionMs: ms })),
     }),
     {
-      name: "murate-player",
+      name: "lime-player",
       partialize: (s) => ({ current: s.current, volume: s.volume }),
     }
   )

@@ -73,7 +73,7 @@ export default function PlayerBar() {
 
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
-        name: "Murate Web Player",
+        name: "Lime Web Player",
         getOAuthToken: async (cb: (t: string) => void) => {
           const t = await getSpotifyToken();
           if (t) cb(t);
@@ -181,14 +181,12 @@ export default function PlayerBar() {
 
   return (
     <div className="fixed bottom-3 inset-x-3 md:inset-x-6 z-40">
-      <div className="max-w-6xl mx-auto rounded-2xl border border-border overflow-hidden shadow-2xl"
-           style={{
-             background: "linear-gradient(135deg, rgba(22,17,32,0.92) 0%, rgba(31,24,48,0.92) 100%)",
-             backdropFilter: "blur(18px)",
-           }}>
+      <div
+        className="max-w-6xl mx-auto rounded-2xl border border-border overflow-hidden shadow-2xl bg-panel/92 backdrop-blur-xl"
+      >
         {/* 상단 진행바 */}
         <div
-          className="h-1 w-full bg-white/5 relative cursor-pointer"
+          className="h-1 w-full bg-fg/5 relative cursor-pointer"
           onClick={(e) => {
             if (!durationMs) return;
             const rect = e.currentTarget.getBoundingClientRect();
@@ -198,7 +196,7 @@ export default function PlayerBar() {
         >
           <div
             className="absolute inset-y-0 left-0"
-            style={{ width: `${pct}%`, background: "linear-gradient(to right, #ff5c8a, #a78bfa)" }}
+            style={{ width: `${pct}%`, background: "linear-gradient(to right, #bef264, #facc15)" }}
           />
         </div>
 
@@ -212,7 +210,7 @@ export default function PlayerBar() {
               >
                 <div
                   className={`relative w-full h-full rounded-full overflow-hidden ${isPlaying ? "animate-[spin_6s_linear_infinite]" : ""}`}
-                  style={{ boxShadow: "0 8px 24px -8px rgba(255,92,138,0.45)" }}
+                  style={{ boxShadow: "0 8px 24px -8px rgb(190 242 100 / 0.45)" }}
                 >
                   {/* 앨범 이미지를 디스크 전체로 꽉 채움 */}
                   <img
@@ -234,7 +232,7 @@ export default function PlayerBar() {
                   <div
                     aria-hidden
                     className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[12%] h-[12%] rounded-full"
-                    style={{ background: "#161120", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2), 0 0 0 2px rgba(0,0,0,0.4)" }}
+                    style={{ background: "rgb(var(--color-bg))", boxShadow: "inset 0 0 0 1px rgb(var(--color-fg) / 0.2), 0 0 0 2px rgb(0 0 0 / 0.4)" }}
                   />
                 </div>
               </Link>
@@ -254,7 +252,7 @@ export default function PlayerBar() {
               <span className="opacity-40">/</span>
               <span>{fmt(durationMs)}</span>
               {mode !== "idle" && (
-                <span className="chip ml-1 text-[9px] md:text-[10px]" style={{ borderColor: "transparent", background: "rgba(255,92,138,0.15)", color: "#ff9cba" }}>
+                <span className="chip ml-1 text-[9px] md:text-[10px]" style={{ borderColor: "transparent", background: "rgb(190 242 100 / 0.18)", color: "#a3e635" }}>
                   {mode === "spotify" ? "FULL" : "PREVIEW"}
                 </span>
               )}
@@ -272,10 +270,11 @@ export default function PlayerBar() {
           {/* 컨트롤 */}
           <button
             onClick={() => setPlaying(!isPlaying)}
-            className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white text-lg shrink-0 active:scale-95 transition"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-lg shrink-0 active:scale-95 transition"
             style={{
-              background: "linear-gradient(135deg, #ff5c8a, #a78bfa)",
-              boxShadow: "0 8px 24px -6px rgba(255,92,138,0.6)",
+              background: "linear-gradient(135deg, #bef264, #facc15)",
+              color: "#1a2410",
+              boxShadow: "0 8px 24px -6px rgb(190 242 100 / 0.6)",
             }}
             aria-label={isPlaying ? "일시정지" : "재생"}
           >
@@ -288,7 +287,7 @@ export default function PlayerBar() {
 
           {/* 볼륨 */}
           <div className="hidden md:flex items-center gap-2 w-36 shrink-0 pr-2">
-            <button onClick={toggleMute} className="text-muted hover:text-white transition" aria-label="음소거">
+            <button onClick={toggleMute} className="text-muted hover:text-fg transition" aria-label="음소거">
               {volPct === 0 ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.17v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
               ) : (

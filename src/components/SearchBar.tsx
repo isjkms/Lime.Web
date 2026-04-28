@@ -104,7 +104,7 @@ export default function SearchBar() {
             <div className="p-2">
               <div className="flex items-center justify-between px-2 py-1">
                 <span className="text-[11px] uppercase tracking-wide text-muted">최근 검색</span>
-                <button type="button" onClick={clearAll} className="text-[11px] text-muted hover:text-white">
+                <button type="button" onClick={clearAll} className="text-[11px] text-muted hover:text-fg">
                   전체 삭제
                 </button>
               </div>

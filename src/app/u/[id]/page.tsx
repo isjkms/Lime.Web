@@ -42,10 +42,10 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="flex gap-4 text-sm mt-2 flex-wrap">
             <span><b>{profile.reviewCount}</b> <span className="text-muted">평가</span></span>
-            <Link href={`/u/${profile.id}/followers`} className="hover:text-white">
+            <Link href={`/u/${profile.id}/followers`} className="hover:text-fg">
               <b>{profile.followersCount}</b> <span className="text-muted">팔로워</span>
             </Link>
-            <Link href={`/u/${profile.id}/following`} className="hover:text-white">
+            <Link href={`/u/${profile.id}/following`} className="hover:text-fg">
               <b>{profile.followingCount}</b> <span className="text-muted">팔로잉</span>
             </Link>
             <span><b>{profile.likesReceived}</b> <span className="text-muted">좋아요</span></span>
@@ -63,7 +63,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">최근 평가</h2>
-          <Link href={`/u/${profile.id}/collection`} className="text-sm text-muted hover:text-white">
+          <Link href={`/u/${profile.id}/collection`} className="text-sm text-muted hover:text-fg">
             🎵 컬렉션 보기 →
           </Link>
         </div>
@@ -77,7 +77,7 @@ export default async function UserPage({ params }: { params: Promise<{ id: strin
               const artist = (meta?.artists ?? []).map((a) => a.name).join(", ");
               return (
                 <li key={r.id} className="card">
-                  <Link href={href} className="flex gap-3 items-center hover:text-white">
+                  <Link href={href} className="flex gap-3 items-center hover:text-fg">
                     {meta?.coverUrl ? (
                       <img src={meta.coverUrl} alt="" className="w-12 h-12 rounded object-cover" />
                     ) : (

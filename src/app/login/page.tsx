@@ -36,7 +36,7 @@ export default function LoginPage() {
 
       <button
         onClick={() => go("naver")}
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg font-medium active:scale-[0.99] transition text-white"
+        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg font-medium active:scale-[0.99] transition text-fg"
         style={{ background: "#03C75A" }}
       >
         <NaverLogo />

@@ -10,6 +10,7 @@ export type CurrentUser = {
   nicknameChanges: number;
   createdAt: string | null;
   providers: string[];
+  consentRequired: boolean;
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -37,6 +38,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       nicknameChanges: typeof data.nicknameChanges === "number" ? data.nicknameChanges : 0,
       createdAt: data.createdAt ?? null,
       providers: Array.isArray(data.providers) ? data.providers : [],
+      consentRequired: data.consentRequired === true,
     };
   } catch {
     return null;

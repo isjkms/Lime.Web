@@ -107,7 +107,7 @@ export default function ReviewList({
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Link href={`/u/${r.user.id}`} className="font-medium hover:text-white hover:underline underline-offset-2">
+                  <Link href={`/u/${r.user.id}`} className="font-medium hover:text-fg hover:underline underline-offset-2">
                     {r.user.name ?? "익명"}
                   </Link>
                   {r.user.reviewCount >= 1000 && r.user.likesReceived >= 1000 && <FamousBadge />}
@@ -126,7 +126,7 @@ export default function ReviewList({
                     <>
                       <button
                         onClick={() => react(r.id, "like")}
-                        className={`flex items-center gap-1 ${r.myReaction === "like" ? "text-accent" : "text-muted hover:text-white"}`}
+                        className={`flex items-center gap-1 ${r.myReaction === "like" ? "text-accent" : "text-muted hover:text-fg"}`}
                         aria-label="좋아요"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 20h3V9H2v11zm19-9.5c0-.8-.7-1.5-1.5-1.5h-5.1l.8-3.7v-.2c0-.3-.1-.6-.3-.8L14 3l-6.6 6.6C7.1 9.9 7 10.3 7 10.7V19c0 .8.7 1.5 1.5 1.5h7c.6 0 1.1-.4 1.4-.9l2.9-6.7c.1-.2.2-.4.2-.6v-1.8z"/></svg>
@@ -134,7 +134,7 @@ export default function ReviewList({
                       </button>
                       <button
                         onClick={() => react(r.id, "dislike")}
-                        className={r.myReaction === "dislike" ? "text-red-400" : "text-muted hover:text-white"}
+                        className={r.myReaction === "dislike" ? "text-red-400" : "text-muted hover:text-fg"}
                         aria-label="싫어요"
                         title="싫어요 수는 공개되지 않아요"
                       >

@@ -98,7 +98,7 @@ function RowView({ target, row }: { target: "track" | "album"; row: Row }) {
             <div className="w-full h-full bg-panel2 flex items-center justify-center text-muted">♪</div>
           )}
           <span
-            className={`absolute inset-0 flex items-center justify-center text-white transition
+            className={`absolute inset-0 flex items-center justify-center text-fg transition
               ${playing ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
               ${!canPlay ? "!opacity-30" : ""}`}
           >

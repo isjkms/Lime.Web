@@ -43,8 +43,8 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-1.5 transition ${active ? "text-white" : "text-muted hover:text-white"}`}
-      style={active ? { background: "linear-gradient(135deg, #ff5c8a, #a78bfa)" } : undefined}
+      className={`px-4 py-1.5 transition ${active ? "text-[#1a2410] font-semibold" : "text-muted hover:text-fg"}`}
+      style={active ? { background: "linear-gradient(135deg, #bef264, #facc15)" } : undefined}
     >
       {children}
     </button>
@@ -77,7 +77,7 @@ function Column({ title, items, hrefPrefix }: { title: string; items: Item[]; hr
                     {isNew(it.first_review_at) && (
                       <span
                         className="shrink-0 text-[9px] font-bold px-1.5 py-[1px] rounded-full"
-                        style={{ background: "linear-gradient(135deg, #ff5c8a, #a78bfa)", color: "white" }}
+                        style={{ background: "linear-gradient(135deg, #bef264, #facc15)", color: "white" }}
                       >
                         NEW
                       </span>

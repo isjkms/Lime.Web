@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 export type CurrentUser = {
   id: string;
@@ -10,6 +11,7 @@ export type CurrentUser = {
   nicknameChanges: number;
   createdAt: string | null;
   providers: string[];
+  consentRequired: boolean;
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -18,7 +20,7 @@ function apiUrl(path: string) {
   return `${API_BASE.replace(/\/$/, "")}${path}`;
 }
 
-export async function getSpotifyToken(): Promise<string | null> {
+export const getSpotifyToken = cache(async (): Promise<string | null> => {
   if (!API_BASE) return null;
   try {
     const cookieStore = await cookies();
@@ -33,9 +35,9 @@ export async function getSpotifyToken(): Promise<string | null> {
   } catch {
     return null;
   }
-}
+});
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!API_BASE) return null;
   try {
     const cookieStore = await cookies();
@@ -59,8 +61,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       nicknameChanges: typeof data.nicknameChanges === "number" ? data.nicknameChanges : 0,
       createdAt: data.createdAt ?? null,
       providers: Array.isArray(data.providers) ? data.providers : [],
+      consentRequired: data.consentRequired === true,
     };
   } catch {
     return null;
   }
-}
+});

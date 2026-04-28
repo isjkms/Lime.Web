@@ -1,3 +1,5 @@
+import LimeMark from "./LimeMark";
+
 // 사용자 아바타. avatarUrl이 있으면 이미지를, 없으면
 // 사용자 id 기반 deterministic 배경색 + 라임 단면 SVG로 폴백.
 const PALETTE = [
@@ -48,38 +50,7 @@ export default function Avatar({
       className={`rounded-full shrink-0 flex items-center justify-center ${className}`}
       style={{ width: size, height: size, background: bg }}
     >
-      <LimeSlice size={Math.round(size * 0.7)} />
+      <LimeMark size={Math.round(size * 0.7)} />
     </div>
-  );
-}
-
-// 라임 단면 (cross-section) — 8조각 과육 + 외곽 껍질
-function LimeSlice({ size }: { size: number }) {
-  const r = 50;
-  const wedges = Array.from({ length: 8 }, (_, i) => i * 45);
-  return (
-    <svg width={size} height={size} viewBox="-60 -60 120 120">
-      {/* 외피 (어두운 초록) */}
-      <circle cx={0} cy={0} r={r + 6} fill="#365314" />
-      {/* 흰 속껍질 */}
-      <circle cx={0} cy={0} r={r + 1} fill="#f7fee7" />
-      {/* 과육 영역 */}
-      <circle cx={0} cy={0} r={r - 4} fill="#bef264" />
-      {/* 과육 격벽 (흰 선) */}
-      {wedges.map((deg) => (
-        <line
-          key={deg}
-          x1={0}
-          y1={0}
-          x2={(r - 4) * Math.cos((deg * Math.PI) / 180)}
-          y2={(r - 4) * Math.sin((deg * Math.PI) / 180)}
-          stroke="#f7fee7"
-          strokeWidth={4}
-          strokeLinecap="round"
-        />
-      ))}
-      {/* 중심 점 */}
-      <circle cx={0} cy={0} r={4} fill="#f7fee7" />
-    </svg>
   );
 }

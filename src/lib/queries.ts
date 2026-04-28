@@ -62,6 +62,38 @@ export async function getRecentlyReviewed(target: "track" | "album", limit = 8) 
   }));
 }
 
+export type RecentMixedItem = {
+  kind: "track" | "album";
+  id: string;
+  spotifyId: string;
+  title: string;
+  artist: string;
+  coverUrl: string | null;
+  lastReviewAt: string;
+};
+
+export async function getRecentlyReviewedMixed(limit = 10): Promise<RecentMixedItem[]> {
+  type Row = {
+    kind: "track" | "album";
+    id: string;
+    spotifyId: string;
+    title: string;
+    artists: ArtistRef[];
+    coverUrl: string | null;
+    lastReviewAt: string;
+  };
+  const rows = await fetchJson<Row[]>(`/catalog/recent-reviewed?target=mixed&limit=${limit}`, []);
+  return rows.map((r) => ({
+    kind: r.kind,
+    id: r.id,
+    spotifyId: r.spotifyId,
+    title: r.title,
+    artist: joinArtists(r.artists),
+    coverUrl: r.coverUrl,
+    lastReviewAt: r.lastReviewAt,
+  }));
+}
+
 export async function getTopRated(
   target: "track" | "album",
   period: "day" | "month" | "year",

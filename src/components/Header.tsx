@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 import NotificationBell from "./NotificationBell";
+import LimeLogo from "./LimeLogo";
 
 export default async function Header() {
   const user = await getCurrentUser();
@@ -17,8 +18,8 @@ export default async function Header() {
       <div className="max-w-6xl mx-auto px-4 py-3">
         {/* 데스크톱: 3-zone 그리드. 좌 로고, 중앙 검색, 우 사용자 — 검색이 시각적으로 정중앙 */}
         <div className="hidden md:grid grid-cols-[auto_1fr_auto] items-center gap-6">
-          <Link href="/" className="font-bold text-xl tracking-tight whitespace-nowrap">
-            Murate<span className="text-accent">♪</span>
+          <Link href="/" className="whitespace-nowrap">
+            <LimeLogo size={28} textClassName="text-xl" />
           </Link>
           <div className="flex justify-center">
             <div className="w-full max-w-xl">
@@ -28,7 +29,7 @@ export default async function Header() {
             </div>
           </div>
           <div className="flex items-center gap-3 justify-end">
-            <Link href="/leaderboard" className="text-sm text-muted hover:text-white whitespace-nowrap">
+            <Link href="/leaderboard" className="text-sm text-muted hover:text-fg whitespace-nowrap">
               🏆 리더보드
             </Link>
             {user && <NotificationBell userId={user.id} />}
@@ -43,11 +44,11 @@ export default async function Header() {
         {/* 모바일: 1행 로고+유저, 2행 검색 */}
         <div className="md:hidden space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="font-bold text-lg tracking-tight whitespace-nowrap">
-              Murate<span className="text-accent">♪</span>
+            <Link href="/" className="whitespace-nowrap">
+              <LimeLogo size={22} textClassName="text-lg" />
             </Link>
             <div className="flex items-center gap-2">
-              <Link href="/leaderboard" aria-label="리더보드" className="text-base px-2 py-1 text-muted hover:text-white">
+              <Link href="/leaderboard" aria-label="리더보드" className="text-base px-2 py-1 text-muted hover:text-fg">
                 🏆
               </Link>
               {user && <NotificationBell userId={user.id} />}

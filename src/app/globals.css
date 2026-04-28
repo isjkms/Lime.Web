@@ -1,22 +1,49 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
 
+/* v4에선 dark variant를 .dark 셀렉터에 명시적으로 매핑해야 함 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ────────────────────────────────────────────────────────────────────
+ * Lime 컬러 토큰
+ * 모든 색은 R G B (alpha 미포함) 형태로 적어 Tailwind alpha-value와 호환.
+ * 액센트: lime-300 → citrus yellow 그라디언트.
+ * ──────────────────────────────────────────────────────────────────── */
 :root {
+  /* 다크 모드 (기본) */
+  --color-bg: 11 13 18;
+  --color-panel: 22 24 32;
+  --color-panel2: 30 33 44;
+  --color-border: 44 48 64;
+  --color-accent: 190 242 100;     /* lime-300 */
+  --color-accent2: 250 204 21;     /* yellow-400 */
+  --color-amber: 251 191 36;
+  --color-muted: 148 154 168;
+  --color-fg: 244 246 251;
   color-scheme: dark;
-  --rose: #ff5c8a;
-  --violet: #a78bfa;
-  --amber: #ffb347;
+}
+
+.theme-light {
+  --color-bg: 252 253 248;
+  --color-panel: 255 255 255;
+  --color-panel2: 245 247 240;
+  --color-border: 220 225 215;
+  --color-accent: 132 204 22;      /* lime-500 (라이트 모드는 진한 라임이 가독성 ↑) */
+  --color-accent2: 234 179 8;      /* yellow-500 */
+  --color-amber: 217 119 6;
+  --color-muted: 100 110 125;
+  --color-fg: 17 24 33;
+  color-scheme: light;
 }
 
 html, body {
   background:
-    radial-gradient(1100px 550px at 85% -10%, rgba(255, 92, 138, 0.14), transparent 60%),
-    radial-gradient(900px 500px at -10% 15%, rgba(167, 139, 250, 0.12), transparent 60%),
-    radial-gradient(700px 400px at 50% 110%, rgba(255, 179, 71, 0.08), transparent 60%),
-    #0b0710;
+    radial-gradient(1100px 550px at 85% -10%, rgb(var(--color-accent) / 0.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 15%, rgb(var(--color-accent2) / 0.08), transparent 60%),
+    radial-gradient(700px 400px at 50% 110%, rgb(var(--color-accent) / 0.05), transparent 60%),
+    rgb(var(--color-bg));
   background-attachment: fixed;
-  color: #f4eff7;
+  color: rgb(var(--color-fg));
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
@@ -26,34 +53,37 @@ html, body {
 
 .card {
   @apply bg-panel/70 border border-border rounded-2xl p-4 backdrop-blur-md;
-  box-shadow: 0 4px 24px -12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 24px -12px rgb(0 0 0 / 0.25);
 }
 .btn {
-  @apply px-3 py-2 rounded-full bg-panel2 border border-border hover:border-accent/60 hover:text-white transition text-sm;
+  @apply px-3 py-2 rounded-full bg-panel2 border border-border hover:border-accent/60 transition text-sm;
 }
 .btn-primary {
-  @apply px-4 py-2 rounded-full font-semibold text-white transition active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed;
-  background: linear-gradient(135deg, #ff5c8a 0%, #a78bfa 100%);
-  box-shadow: 0 6px 20px -6px rgba(255, 92, 138, 0.5);
+  @apply px-4 py-2 rounded-full font-semibold transition active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed;
+  background: linear-gradient(135deg, rgb(var(--color-accent)) 0%, rgb(var(--color-accent2)) 100%);
+  color: #1a2410;
+  box-shadow: 0 6px 20px -6px rgb(var(--color-accent) / 0.55);
 }
-.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:hover { filter: brightness(1.05); }
 .input {
   @apply bg-panel2/80 border border-border rounded-xl px-4 py-2 outline-none focus:border-accent w-full transition;
 }
 
 /* 스크롤바 */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #2d2342; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #3d3055; }
+::-webkit-scrollbar-thumb { background: rgb(var(--color-border)); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-muted) / 0.6); }
 
-/* 레이블 */
+/* 칩 */
 .chip {
   @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs border border-border bg-panel2/70 text-muted;
 }
 
-/* 히어로 그라디언트 텍스트 */
+/* 그라디언트 텍스트 (워드마크용) */
 .gradient-text {
-  background: linear-gradient(90deg, #ff5c8a, #ffb347, #a78bfa);
+  background: linear-gradient(90deg,
+    rgb(var(--color-accent)),
+    rgb(var(--color-accent2)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -71,8 +101,8 @@ input[type="range"].slider::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
   background: linear-gradient(to right,
-    #ff5c8a var(--pct, 0%),
-    rgba(255,255,255,0.12) var(--pct, 0%));
+    rgb(var(--color-accent)) var(--pct, 0%),
+    rgb(var(--color-border)) var(--pct, 0%));
 }
 input[type="range"].slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -81,26 +111,26 @@ input[type="range"].slider::-webkit-slider-thumb {
   height: 14px;
   border-radius: 999px;
   background: #fff;
-  border: 2px solid #ff5c8a;
+  border: 2px solid rgb(var(--color-accent));
   margin-top: -5px;
-  box-shadow: 0 2px 6px rgba(255, 92, 138, 0.6);
+  box-shadow: 0 2px 6px rgb(var(--color-accent) / 0.5);
 }
 input[type="range"].slider::-moz-range-track {
   height: 4px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.12);
+  background: rgb(var(--color-border));
 }
 input[type="range"].slider::-moz-range-progress {
   height: 4px;
   border-radius: 999px;
-  background: #ff5c8a;
+  background: rgb(var(--color-accent));
 }
 input[type="range"].slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 999px;
   background: #fff;
-  border: 2px solid #ff5c8a;
+  border: 2px solid rgb(var(--color-accent));
 }
 
 @keyframes toastIn {

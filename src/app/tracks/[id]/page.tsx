@@ -58,7 +58,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
               {artist}
               {track.albumName && (
                 <> · {track.albumId ? (
-                  <Link href={`/albums/${track.albumId}`} className="hover:text-white underline-offset-2 hover:underline">{track.albumName}</Link>
+                  <Link href={`/albums/${track.albumId}`} className="hover:text-fg underline-offset-2 hover:underline">{track.albumName}</Link>
                 ) : (
                   <span>{track.albumName}</span>
                 )}</>

@@ -41,6 +41,9 @@ export default function UserMenu({
           <Link href="/me" onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-panel2 text-sm">
             내 프로필
           </Link>
+          <Link href="/me/settings" onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-panel2 text-sm">
+            설정
+          </Link>
           {isAdmin && (
             <Link href="/admin/reports" onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-panel2 text-sm text-amber">
               🛡 신고 관리

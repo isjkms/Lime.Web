@@ -73,14 +73,14 @@ export async function GET(
             {truncate(artist, 60)}
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginTop: 20 }}>
-            <div style={{ fontSize: 96, fontWeight: 800, color: "#ff5c8a", lineHeight: 1 }}>{avg}</div>
+            <div style={{ fontSize: 96, fontWeight: 800, color: "#bef264", lineHeight: 1 }}>{avg}</div>
             <div style={{ fontSize: 24, color: "#8a8fa0", display: "flex", flexDirection: "column" }}>
               <span>/ 10</span>
               <span>{n}개의 평가</span>
             </div>
           </div>
           <div style={{ marginTop: "auto", fontSize: 22, color: "#8a8fa0", display: "flex" }}>
-            Lime<span style={{ color: "#ff5c8a" }}>♪</span>
+            Lime<span style={{ color: "#bef264" }}>♪</span>
           </div>
         </div>
       </div>
